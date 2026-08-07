@@ -287,7 +287,7 @@ public class BattleService {
      */
     private Map<Long, Long> recentWinMap() {
         LocalDate from = LocalDate.now().minusDays(rules.getRecentWindowDays());
-        return lunchMapper.findRecentWinCounts(from).stream()
+        return lunchMapper.findRecentWinCounts(from, LocalDate.now()).stream()
                 .collect(Collectors.toMap(
                         r -> r.getRestaurantId(),
                         r -> r.getWinCount() == null ? 0L : r.getWinCount()));

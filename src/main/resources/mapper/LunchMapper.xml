@@ -57,7 +57,9 @@
         FROM battles b
         WHERE b.status = 'CLOSED'
           AND b.winner_restaurant_id IS NOT NULL
-          AND b.battle_date &gt;= #{from}
+          -- 위아래를 모두 막는다. 상한이 없으면 미래 날짜로 만든 배틀까지
+          -- "최근에 먹은 것"으로 잡혀 감점이 끝없이 쌓인다.
+          AND b.battle_date BETWEEN #{from} AND #{to}
         GROUP BY b.winner_restaurant_id
     </select>
 

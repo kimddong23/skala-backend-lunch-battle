@@ -58,6 +58,19 @@
   .notice.err{background:var(--warn-soft);color:var(--warn);border-color:#f3d0b8}
   .notice .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none;opacity:.75}
   .empty{color:var(--dim);font-size:14px;padding:8px 0}
+
+  /* 레이스 */
+  #raceWrap{display:none}
+  #raceWrap.on{display:block}
+  .track{background:#faf7f0;border:1px solid var(--line);border-radius:10px;
+         padding:10px 12px;position:relative;overflow:hidden}
+  canvas{display:block;width:100%;height:auto;border-radius:6px}
+  .rboard{margin-top:12px}
+  .rboard tr.win{background:var(--brand-soft);font-weight:600}
+  .rboard .medal{width:26px;text-align:center}
+  .headline{background:#fff8e6;border-left:3px solid #d9a300;color:#7a5a00;
+            padding:10px 14px;border-radius:6px;font-size:14px;margin:12px 0 0}
+  .seed{font-family:D2Coding,monospace;font-size:11.5px;color:var(--dim);margin-top:6px}
 </style>
 </head>
 <body>
@@ -74,7 +87,7 @@
       <select id="voterSel"></select>
       <select id="restSel"></select>
       <button id="addBtn" class="ghost">후보 올리기</button>
-      <button id="closeBtn">마감하고 결정</button>
+      <button id="raceBtn">🐹 레이스 시작</button>
     </div>
     <div class="notice" id="notice"><span class="dot"></span><span id="noticeText">준비되었습니다</span></div>
   </div>
@@ -82,6 +95,15 @@
   <div class="card">
     <div class="banner" id="comment">—</div>
     <div id="cands"></div>
+  </div>
+
+  <div class="card" id="raceWrap">
+    <h2>🐹 햄스터 레이스</h2>
+    <p class="sub">후보 메뉴가 햄스터로 달립니다 · 스탯은 출발 직전에 무작위로 정해집니다</p>
+    <div class="track"><canvas id="raceCanvas" width="1000" height="420"></canvas></div>
+    <div class="headline" id="headline">출발 준비</div>
+    <div class="seed" id="seed"></div>
+    <div id="board" class="rboard"></div>
   </div>
 
   <div class="card">
@@ -147,7 +169,8 @@ function render(){
     + (battle.winnerName ? ` · 우승 ${battle.winnerName}` : '');
   $('#comment').textContent = battle.comment || '—';
   $('#addBtn').disabled = closed;
-  $('#closeBtn').disabled = closed;
+  const raceBtn = $('#raceBtn');
+  if (raceBtn) raceBtn.disabled = closed || (battle.candidates || []).length < 2;
 
   const cands = battle.candidates || [];
   if (!cands.length){ $('#cands').innerHTML = '<p class="empty">후보가 없습니다. 위에서 식당을 올려 주세요.</p>'; return; }
@@ -190,12 +213,148 @@ $('#addBtn').onclick = async () => {
   } catch(e){ notice(e.message, 'err'); }
 };
 
-$('#closeBtn').onclick = async () => {
+// ── 햄스터 레이스 ──────────────────────────────────────────
+const LANE_COLORS = ['#2f7d55','#c2410c','#1d4ed8','#7c3aed','#be185d','#0f766e','#a16207','#4338ca'];
+let raceData = null, raceFrame = 0, raceTimer = null;
+
+$('#raceBtn').onclick = async () => {
   try {
-    battle = await api(`/api/battles/${battle.id}/close`, {method:'POST'});
-    render(); notice(`오늘 점심은 ${battle.winnerName} 입니다`, 'ok');
-  } catch(e){ notice(e.message, 'err'); }
+    $('#raceBtn').disabled = true;
+    notice('레이스 준비 중…');
+    raceData = await api(`/api/battles/${battle.id}/race`, {method:'POST'});
+    $('#raceWrap').classList.add('on');
+    $('#seed').textContent = `시드 ${raceData.seed} · ${raceData.totalTicks}틱 · 같은 시드로 언제든 재현 가능`;
+    $('#headline').textContent = '출발!';
+    $('#board').innerHTML = '';
+    playRace();
+  } catch(e){
+    notice(e.message, 'err');
+    $('#raceBtn').disabled = false;
+  }
 };
+
+function playRace(){
+  const cv = $('#raceCanvas'), ctx = cv.getContext('2d');
+  const lanes = [...raceData.lanes].sort((a,b) => a.candidateId - b.candidateId);
+  const total = raceData.totalTicks;
+
+  // 레인 수에 맞춰 캔버스 높이를 정한다 (겹치지 않게)
+  const laneH = 74, padTop = 52, padBottom = 22;
+  cv.height = padTop + lanes.length * laneH + padBottom;
+
+  const startX = 168, endX = cv.width - 70;
+  raceFrame = 0;
+  clearInterval(raceTimer);
+
+  const finished = [];
+
+  raceTimer = setInterval(() => {
+    raceFrame++;
+    draw();
+    if (raceFrame >= total){
+      clearInterval(raceTimer);
+      finishRace();
+    }
+  }, 16);   // 약 60fps
+
+  function draw(){
+    ctx.clearRect(0, 0, cv.width, cv.height);
+
+    // 배경
+    ctx.fillStyle = '#faf7f0';
+    ctx.fillRect(0, 0, cv.width, cv.height);
+
+    // 진행 표시
+    ctx.fillStyle = '#8a8a8a';
+    ctx.font = '600 22px "Apple SD Gothic Neo",sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${raceFrame} / ${total}`, 16, 28);
+
+    // 결승선
+    for (let y = 0; y < cv.height; y += 18){
+      ctx.fillStyle = (Math.floor(y / 18) % 2 === 0) ? '#333' : '#fff';
+      ctx.fillRect(endX + 14, y, 14, 18);
+    }
+    ctx.fillStyle = '#333';
+    ctx.font = '600 20px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('FINISH', endX + 21, 26);
+
+    lanes.forEach((lane, i) => {
+      const y = padTop + i * laneH + laneH / 2;
+      const pos = lane.track[Math.min(raceFrame, lane.track.length - 1)] || 0;
+      const ratio = pos / raceData.trackLength;
+      const x = startX + (endX - startX) * ratio;
+      const color = LANE_COLORS[i % LANE_COLORS.length];
+
+      // 레인 바닥
+      ctx.strokeStyle = '#e6e0d4';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath(); ctx.moveTo(startX, y + 26); ctx.lineTo(endX + 6, y + 26); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 지나온 길
+      ctx.strokeStyle = color + '55';
+      ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(startX, y + 26); ctx.lineTo(x, y + 26); ctx.stroke();
+
+      // 이름표
+      ctx.fillStyle = color;
+      ctx.font = '600 21px "Apple SD Gothic Neo",sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(lane.restaurantName, startX - 16, y + 12);
+
+      // 달리는 모습 — 위아래로 통통 튀게
+      const bob = Math.sin(raceFrame * 0.45 + i) * 5;
+      const done = lane.finishTick && raceFrame >= lane.finishTick;
+
+      // 먼지
+      if (!done && raceFrame > 0){
+        ctx.fillStyle = '#d9cfc0';
+        for (let d = 1; d <= 3; d++){
+          const dx = x - 22 - d * 9 - (raceFrame % 6);
+          if (dx > startX) {
+            ctx.beginPath();
+            ctx.arc(dx, y + 24 + Math.sin(raceFrame * 0.5 + d) * 2, 5 - d * 0.9, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+
+      ctx.font = '46px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('🐹', x, y + 16 + (done ? 0 : bob));
+
+      // 완주 표시는 햄스터 왼쪽에 둔다. 오른쪽에 두면 결승선 무늬와 겹친다.
+      if (done){
+        ctx.font = '24px sans-serif';
+        ctx.fillText('🏁', x - 36, y + 10);
+      }
+    });
+  }
+
+  function finishRace(){
+    const ranked = [...raceData.lanes].sort((a,b) => a.rank - b.rank);
+    const medal = ['🥇','🥈','🥉'];
+    $('#headline').textContent = '📢 ' + raceData.headline;
+    $('#board').innerHTML = `<table>
+      <tr><th class="medal"></th><th>메뉴</th><th>스카우팅</th>
+          <th class="n">속도</th><th class="n">지구력</th><th class="n">가속</th>
+          <th class="n">응원</th><th class="n">짐</th><th class="n">완주</th></tr>
+      ${ranked.map((l, i) => `<tr class="${i===0?'win':''}">
+        <td class="medal">${medal[i] || (i+1)}</td>
+        <td>${l.restaurantName}</td>
+        <td style="color:var(--dim);font-size:12.5px">${l.scouting}</td>
+        <td class="n">${l.speed}</td><td class="n">${l.stamina}</td><td class="n">${l.burst}</td>
+        <td class="n">${l.cheerBonus > 0 ? '+' + l.cheerBonus : '-'}</td>
+        <td class="n">${l.handicap > 0 ? '-' + l.handicap : '-'}</td>
+        <td class="n">${l.finishTick ?? '미완주'}</td></tr>`).join('')}
+    </table>`;
+    notice(`오늘 점심은 ${raceData.winnerName} 입니다`, 'ok');
+    loadBattle().then(() => loadAnalysis($('[data-tab].on')?.dataset.tab || 'ranking'));
+  }
+}
 
 // ── 분석 탭 ──
 const TABS = [
