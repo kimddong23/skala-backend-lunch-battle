@@ -117,6 +117,19 @@
 
 <script>
 const $ = s => document.querySelector(s);
+
+/**
+ * HTML 이스케이프.
+ *
+ * 식당명·사원명은 사용자가 입력한 값이다. 그대로 innerHTML 에 넣으면
+ * <img src=x onerror=...> 같은 문자열이 태그로 해석되어 스크립트가 실행된다.
+ * 화면에 넣기 전에 반드시 통과시킨다.
+ */
+const esc = v => String(v ?? '').replace(/[&<>"']/g,
+  ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+
+/** 감점 안내 조각. 출력 지점을 한곳에 모아 이스케이프 누락을 눈에 띄게 한다. */
+const penaltyHtml = note => note ? `<div class="penalty">${esc(note)}</div>` : '';
 let battle = null, members = [], restaurants = [];
 
 /** 알림. 자리를 차지하는 줄이라 본문을 가리지 않는다. */
@@ -142,9 +155,9 @@ async function loadBase(){
     api('/api/members'), api('/api/restaurants/active')
   ]);
   $('#voterSel').innerHTML = members
-      .map(m => `<option value="${m.id}">${m.name} (${m.department})</option>`).join('');
+      .map(m => `<option value="${m.id}">${esc(m.name)} (${esc(m.department)})</option>`).join('');
   $('#restSel').innerHTML = restaurants
-      .map(r => `<option value="${r.id}">${r.name} · ${r.category} · 도보${r.walkMinutes}분</option>`).join('');
+      .map(r => `<option value="${r.id}">${esc(r.name)} · ${esc(r.category)} · 도보${r.walkMinutes}분</option>`).join('');
 }
 
 async function loadBattle(){
@@ -180,14 +193,14 @@ function render(){
     <div class="cand ${i === 0 ? 'lead' : ''}">
       <div class="top">
         <div>
-          <div class="nm">${i === 0 ? '👑 ' : ''}${c.restaurantName}</div>
-          <div class="meta">${c.category} · 도보 ${c.walkMinutes}분 · ${c.price.toLocaleString()}원 · ${c.addedByName} 추천</div>
+          <div class="nm">${i === 0 ? '👑 ' : ''}${esc(c.restaurantName)}</div>
+          <div class="meta">${esc(c.category)} · 도보 ${c.walkMinutes}분 · ${c.price.toLocaleString()}원 · ${esc(c.addedByName)} 추천</div>
         </div>
         <div class="score">${c.voteCount}표 <span class="meta">(최종 ${c.finalScore})</span></div>
       </div>
       <div class="bar"><span style="width:${(c.voteCount / max * 100).toFixed(0)}%"></span></div>
       <div class="meta">득표율 ${c.sharePercent}%</div>
-      ${c.penaltyNote ? `<div class="penalty">${c.penaltyNote}</div>` : ''}
+      ${penaltyHtml(c.penaltyNote)}
       ${closed ? '' : `<div style="margin-top:9px"><button data-vote="${c.id}">이걸로 투표</button></div>`}
     </div>`).join('');
 
@@ -344,8 +357,8 @@ function playRace(){
           <th class="n">응원</th><th class="n">짐</th><th class="n">완주</th></tr>
       ${ranked.map((l, i) => `<tr class="${i===0?'win':''}">
         <td class="medal">${medal[i] || (i+1)}</td>
-        <td>${l.restaurantName}</td>
-        <td style="color:var(--dim);font-size:12.5px">${l.scouting}</td>
+        <td>${esc(l.restaurantName)}</td>
+        <td style="color:var(--dim);font-size:12.5px">${esc(l.scouting)}</td>
         <td class="n">${l.speed}</td><td class="n">${l.stamina}</td><td class="n">${l.burst}</td>
         <td class="n">${l.cheerBonus > 0 ? '+' + l.cheerBonus : '-'}</td>
         <td class="n">${l.handicap > 0 ? '-' + l.handicap : '-'}</td>
@@ -377,7 +390,7 @@ async function loadAnalysis(key){
   $('#analysis').innerHTML = `<table>
     <tr>${tab.cols.map(([,l,n]) => `<th class="${n?'n':''}">${l}</th>`).join('')}</tr>
     ${rows.map(r => `<tr>${tab.cols.map(([k,,n]) =>
-        `<td class="${n?'n':''}">${r[k] ?? '-'}</td>`).join('')}</tr>`).join('')}
+        `<td class="${n?'n':''}">${esc(r[k] ?? '-')}</td>`).join('')}</tr>`).join('')}
   </table>`;
 }
 document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => loadAnalysis(b.dataset.tab));

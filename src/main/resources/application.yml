@@ -12,8 +12,9 @@ spring:
 
   h2:
     console:
-      enabled: true
-      path: /h2-console
+      # DB 를 브라우저에서 직접 조작할 수 있는 창구다. 개발 중에만 켠다.
+      # 제출본에서는 꺼 둔다 — 켜 두면 누구나 테이블을 지울 수 있다.
+      enabled: false
 
   jpa:
     defer-datasource-initialization: true
@@ -50,7 +51,9 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,env,beans,mappings,loggers
+        # 상태 확인에 필요한 것만 연다.
+        # env 는 설정값을, beans·mappings 는 내부 구조를 그대로 드러내므로 제외한다.
+        include: health,info,metrics
   endpoint:
     health:
       show-details: always
