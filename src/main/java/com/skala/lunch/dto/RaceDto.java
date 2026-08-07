@@ -1,5 +1,7 @@
 package com.skala.lunch.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.*;
 
 import java.util.List;
@@ -16,7 +18,15 @@ public class RaceDto {
     private Long raceId;
     private Long battleId;
 
-    /** 난수 시드. 이 값으로 같은 경기를 다시 돌릴 수 있다. */
+    /**
+     * 난수 시드. 이 값으로 같은 경기를 다시 돌릴 수 있다.
+     *
+     * 문자열로 내보낸다. long 은 최대 19자리인데 자바스크립트 number 가 정확히
+     * 담을 수 있는 정수는 9,007,199,254,740,991(16자리)까지다. 숫자로 내보내면
+     * 브라우저가 끝자리를 반올림해 버려(...164683 → ...164000) 화면에 뜬 시드로는
+     * 같은 경기를 재현할 수 없다. 재현성이 이 값의 존재 이유이므로 정밀도를 지킨다.
+     */
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long seed;
 
     private Integer trackLength;
