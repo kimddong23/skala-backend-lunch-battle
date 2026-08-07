@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>우리 회사 점심 정하기</title>
+<style>
+  :root{
+    --bg:#f4f6f5; --card:#fff; --line:#e2e6e4; --ink:#1b1f23; --dim:#66707a;
+    --brand:#2f7d55; --brand-soft:#e8f3ec; --warn:#c2410c; --warn-soft:#fff3ea;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+       font-size:15px;line-height:1.6}
+  header{background:var(--brand);color:#fff;padding:18px 20px}
+  header h1{margin:0;font-size:19px;letter-spacing:-.3px}
+  header p{margin:4px 0 0;font-size:13px;opacity:.9}
+  main{max-width:960px;margin:0 auto;padding:18px 16px 60px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;
+        padding:16px 18px;margin-bottom:14px}
+  .card h2{margin:0 0 4px;font-size:15px;color:var(--brand)}
+  .card .sub{margin:0 0 14px;font-size:13px;color:var(--dim)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  select,button{font:inherit;border-radius:7px;border:1px solid var(--line);padding:8px 12px;background:#fff}
+  button{cursor:pointer;background:var(--brand);color:#fff;border-color:var(--brand);font-weight:600}
+  button:hover{filter:brightness(1.07)}
+  button.ghost{background:#fff;color:var(--brand)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .banner{background:var(--brand-soft);border-left:3px solid var(--brand);
+          padding:10px 14px;border-radius:6px;font-size:14px;margin-bottom:14px}
+  .cand{border:1px solid var(--line);border-radius:9px;padding:12px 14px;margin-bottom:10px;
+        transition:border-color .15s}
+  .cand:hover{border-color:var(--brand)}
+  .cand.lead{border-color:var(--brand);background:var(--brand-soft)}
+  .cand .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .cand .nm{font-weight:700}
+  .cand .meta{font-size:12.5px;color:var(--dim)}
+  .cand .score{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+  .bar{height:9px;background:#eef1f0;border-radius:5px;margin:9px 0 6px;overflow:hidden}
+  .bar > span{display:block;height:100%;background:var(--brand);border-radius:5px;
+              transition:width .35s ease}
+  .penalty{background:var(--warn-soft);color:var(--warn);border-radius:5px;
+           padding:5px 9px;font-size:12.5px;margin-top:6px;display:inline-block}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left}
+  th{color:var(--dim);font-weight:600;font-size:12.5px}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+  .tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+  .tabs button{background:#fff;color:var(--dim);border-color:var(--line);font-weight:500;padding:6px 12px;font-size:13.5px}
+  .tabs button.on{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:600}
+  /* 떠 있는 알림은 본문을 가린다. 자리를 차지하게 두어 겹침을 없앤다. */
+  .notice{min-height:38px;display:flex;align-items:center;gap:8px;
+          border-radius:7px;padding:8px 13px;font-size:13.5px;
+          background:#f0f2f1;color:var(--dim);border:1px solid var(--line);
+          transition:background .2s,color .2s,border-color .2s}
+  .notice.ok{background:var(--brand-soft);color:#1e5c3c;border-color:#bfdccb}
+  .notice.err{background:var(--warn-soft);color:var(--warn);border-color:#f3d0b8}
+  .notice .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none;opacity:.75}
+  .empty{color:var(--dim);font-size:14px;padding:8px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>우리 회사 점심 정하기</h1>
+  <p>후보를 올리고 투표해서 오늘의 점심을 정합니다 · 최근에 먹은 메뉴는 감점됩니다</p>
+</header>
+
+<main>
+  <div class="card">
+    <h2>오늘의 배틀</h2>
+    <p class="sub" id="battleInfo">불러오는 중…</p>
+    <div class="row">
+      <select id="voterSel"></select>
+      <select id="restSel"></select>
+      <button id="addBtn" class="ghost">후보 올리기</button>
+      <button id="closeBtn">마감하고 결정</button>
+    </div>
+    <div class="notice" id="notice"><span class="dot"></span><span id="noticeText">준비되었습니다</span></div>
+  </div>
+
+  <div class="card">
+    <div class="banner" id="comment">—</div>
+    <div id="cands"></div>
+  </div>
+
+  <div class="card">
+    <h2>분석</h2>
+    <p class="sub">집계 조회는 SQL Mapper(MyBatis) 로 처리합니다</p>
+    <div class="tabs" id="tabs"></div>
+    <div id="analysis"></div>
+  </div>
+</main>
+
+
+<script>
+const $ = s => document.querySelector(s);
+let battle = null, members = [], restaurants = [];
+
+/** 알림. 자리를 차지하는 줄이라 본문을 가리지 않는다. */
+function notice(msg, kind){
+  const box = $('#notice');
+  $('#noticeText').textContent = msg;
+  box.classList.remove('ok', 'err');
+  if (kind) box.classList.add(kind);
+}
+
+async function api(path, opts){
+  const res = await fetch(path, opts);
+  const text = await res.text();
+  const body = text ? JSON.parse(text) : null;
+  if (!res.ok) throw new Error(body?.message || `요청 실패 (${res.status})`);
+  return body;
+}
+
+const today = () => new Date().toLocaleDateString('sv-SE');   // YYYY-MM-DD
+
+async function loadBase(){
+  [members, restaurants] = await Promise.all([
+    api('/api/members'), api('/api/restaurants/active')
+  ]);
+  $('#voterSel').innerHTML = members
+      .map(m => `<option value="${m.id}">${m.name} (${m.department})</option>`).join('');
+  $('#restSel').innerHTML = restaurants
+      .map(r => `<option value="${r.id}">${r.name} · ${r.category} · 도보${r.walkMinutes}분</option>`).join('');
+}
+
+async function loadBattle(){
+  // 목록에서 오늘 것을 찾는다.
+  // 없을 때 404 를 받는 방식으로 하면 정상 흐름인데도 콘솔에 오류가 찍힌다.
+  const list = await api('/api/battles');
+  const mine = list.find(b => b.battleDate === today());
+
+  battle = mine
+    ? await api(`/api/battles/${mine.id}`)
+    : await api('/api/battles', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({battleDate: today(), closesAt: `${today()}T23:59:00`})
+      });
+  render();
+}
+
+function render(){
+  const closed = battle.status === 'CLOSED';
+  $('#battleInfo').textContent =
+    `${battle.battleDate} · ${closed ? '마감됨' : '투표 중'} · 총 ${battle.totalVotes}표`
+    + (battle.winnerName ? ` · 우승 ${battle.winnerName}` : '');
+  $('#comment').textContent = battle.comment || '—';
+  $('#addBtn').disabled = closed;
+  $('#closeBtn').disabled = closed;
+
+  const cands = battle.candidates || [];
+  if (!cands.length){ $('#cands').innerHTML = '<p class="empty">후보가 없습니다. 위에서 식당을 올려 주세요.</p>'; return; }
+
+  const max = Math.max(1, ...cands.map(c => c.voteCount));
+  $('#cands').innerHTML = cands.map((c, i) => `
+    <div class="cand ${i === 0 ? 'lead' : ''}">
+      <div class="top">
+        <div>
+          <div class="nm">${i === 0 ? '👑 ' : ''}${c.restaurantName}</div>
+          <div class="meta">${c.category} · 도보 ${c.walkMinutes}분 · ${c.price.toLocaleString()}원 · ${c.addedByName} 추천</div>
+        </div>
+        <div class="score">${c.voteCount}표 <span class="meta">(최종 ${c.finalScore})</span></div>
+      </div>
+      <div class="bar"><span style="width:${(c.voteCount / max * 100).toFixed(0)}%"></span></div>
+      <div class="meta">득표율 ${c.sharePercent}%</div>
+      ${c.penaltyNote ? `<div class="penalty">${c.penaltyNote}</div>` : ''}
+      ${closed ? '' : `<div style="margin-top:9px"><button data-vote="${c.id}">이걸로 투표</button></div>`}
+    </div>`).join('');
+
+  document.querySelectorAll('[data-vote]').forEach(b =>
+    b.onclick = () => vote(Number(b.dataset.vote)));
+}
+
+async function vote(candidateId){
+  try {
+    battle = await api(`/api/battles/${battle.id}/votes`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({memberId: Number($('#voterSel').value), candidateId})
+    });
+    render(); notice('투표했습니다', 'ok');
+  } catch(e){ notice(e.message, 'err'); }
+}
+
+$('#addBtn').onclick = async () => {
+  try {
+    await api(`/api/battles/${battle.id}/candidates?restaurantId=${$('#restSel').value}&memberId=${$('#voterSel').value}`,
+              {method:'POST'});
+    await loadBattle(); notice('후보로 올렸습니다', 'ok');
+  } catch(e){ notice(e.message, 'err'); }
+};
+
+$('#closeBtn').onclick = async () => {
+  try {
+    battle = await api(`/api/battles/${battle.id}/close`, {method:'POST'});
+    render(); notice(`오늘 점심은 ${battle.winnerName} 입니다`, 'ok');
+  } catch(e){ notice(e.message, 'err'); }
+};
+
+// ── 분석 탭 ──
+const TABS = [
+  {key:'ranking',          label:'식당 랭킹',   cols:[['rank','순위'],['restaurantName','식당'],['category','분류'],['winCount','우승',1],['totalVotes','득표',1],['winRate','우승률%',1],['avgScore','평점',1]]},
+  {key:'department-taste', label:'부서별 취향', cols:[['department','부서'],['category','분류'],['voteCount','표',1],['sharePercent','비중%',1]]},
+  {key:'picky-index',      label:'편식 지수',   cols:[['memberName','사원'],['department','부서'],['topCategory','최애'],['pickyPercent','편중%',1],['verdict','판정']]},
+  {key:'category-share',   label:'분류별 점유', cols:[['category','분류'],['voteCount','득표',1],['sharePercent','점유%',1],['winCount','우승',1]]},
+  {key:'weekday-trend',    label:'요일별',      cols:[['weekdayName','요일'],['category','분류'],['voteCount','표',1]]},
+  {key:'participation',    label:'참여율',      cols:[['battleDate','날짜'],['winnerName','우승'],['candidateCount','후보',1],['voterCount','투표',1],['participationPercent','참여%',1]]},
+];
+
+$('#tabs').innerHTML = TABS.map((t,i) =>
+  `<button data-tab="${t.key}" class="${i===0?'on':''}">${t.label}</button>`).join('');
+
+async function loadAnalysis(key){
+  document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === key));
+  const tab = TABS.find(t => t.key === key);
+  const rows = await api(`/api/analysis/${key}`);
+  if (!rows.length){ $('#analysis').innerHTML = '<p class="empty">데이터가 없습니다.</p>'; return; }
+  $('#analysis').innerHTML = `<table>
+    <tr>${tab.cols.map(([,l,n]) => `<th class="${n?'n':''}">${l}</th>`).join('')}</tr>
+    ${rows.map(r => `<tr>${tab.cols.map(([k,,n]) =>
+        `<td class="${n?'n':''}">${r[k] ?? '-'}</td>`).join('')}</tr>`).join('')}
+  </table>`;
+}
+document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => loadAnalysis(b.dataset.tab));
+
+(async () => {
+  try {
+    await loadBase();
+    await loadBattle();
+    await loadAnalysis('ranking');
+  } catch(e){ notice('초기화 실패: ' + e.message, 'err'); }
+})();
+</script>
+</body>
+</html>

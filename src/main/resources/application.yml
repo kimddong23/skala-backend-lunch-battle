@@ -1,0 +1,86 @@
+spring:
+  application:
+    name: lunch-battle
+
+  datasource:
+    # DB_CLOSE_DELAY=-1 이 없으면 커넥션이 모두 닫히는 순간 인메모리 DB 가 사라진다.
+    # 앱은 살아 있는데 "Table not found (this database is empty)" 로 전 기능이 죽는다.
+    url: jdbc:h2:mem:lunchdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data.sql
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.skala.lunch.entity,com.skala.lunch.dto
+  configuration:
+    map-underscore-to-camel-case: true
+    # 기본값(SESSION)은 한 트랜잭션에서 같은 조회를 두 번 하면 첫 결과를 재사용한다.
+    # 투표 직후 순위를 다시 읽을 때 낡은 값이 나가므로 문 단위로 낮춘다.
+    local-cache-scope: STATEMENT
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+  show-actuator: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,beans,mappings,loggers
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: 우리 회사 점심 정하기
+    description: 점심 메뉴 배틀 - 투표로 오늘의 점심을 정한다
+    version: 1.0.0
+
+# 배틀 운영 규칙 (코드에 흩어놓지 않고 한곳에서 관리)
+lunch:
+  battle:
+    # 투표 마감 시각 (기본값)
+    default-close-time: "11:30"
+    # 최근 며칠 안에 우승한 식당에 불이익을 준다
+    recent-window-days: 7
+    # "또 그거야?" 감점 — 최근 우승 1회당 깎는 점수
+    repeat-penalty: 2
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.skala.lunch: DEBUG
+    # MyBatis 가 실제로 던지는 SQL 을 보려면 매퍼 인터페이스 패키지를 DEBUG 로 둬야 한다.
+    # 이걸 안 켜면 Hibernate 로그만 보여 "질의가 0개"로 착각하게 된다.
+    com.skala.lunch.mapper: DEBUG
+    org.springframework.web: INFO

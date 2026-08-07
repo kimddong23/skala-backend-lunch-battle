@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+    집계·분석 SQL.
+    resultType 은 application.yml 의 type-aliases-package 에서 찾는다.
+    별칭을 못 찾으면 기동 자체가 실패하므로 오타는 즉시 드러난다.
+-->
+<mapper namespace="com.skala.lunch.mapper.LunchMapper">
+
+    <!-- 식당별 평점 집계 (여러 곳에서 재사용) -->
+    <sql id="reviewAgg">
+        SELECT restaurant_id,
+               ROUND(AVG(CAST(score AS DOUBLE)), 1) AS avg_score,
+               COUNT(*) AS review_count
+        FROM reviews
+        GROUP BY restaurant_id
+    </sql>
+
+    <!-- 식당별 우승 횟수 (마감된 배틀만) -->
+    <sql id="winAgg">
+        SELECT winner_restaurant_id AS restaurant_id, COUNT(*) AS win_count
+        FROM battles
+        WHERE status = 'CLOSED' AND winner_restaurant_id IS NOT NULL
+        GROUP BY winner_restaurant_id
+    </sql>
+
+    <!--
+        식당 목록 + 집계.
+        JPA 로 하면 식당 1건마다 리뷰 조회 + 우승 조회가 붙어 질의가 2N+1 개가 된다.
+    -->
+    <select id="findRestaurantSummaries" resultType="RestaurantSummaryDto">
+        SELECT
+            r.id            AS id,
+            r.name          AS name,
+            r.category      AS category,
+            r.walk_minutes  AS walkMinutes,
+            r.price         AS price,
+            r.active        AS active,
+            COALESCE(rv.avg_score, 0)    AS avgScore,
+            COALESCE(rv.review_count, 0) AS reviewCount,
+            COALESCE(w.win_count, 0)     AS winCount
+        FROM restaurants r
+        LEFT JOIN (<include refid="reviewAgg"/>) rv ON rv.restaurant_id = r.id
+        LEFT JOIN (<include refid="winAgg"/>)    w  ON w.restaurant_id  = r.id
+        <if test="activeOnly">
+            WHERE r.active = TRUE
+        </if>
+        ORDER BY r.id
+    </select>
+
+    <!-- 최근 N일 우승 횟수 — 배틀 화면의 "또 그거야?" 감점 계산 -->
+    <select id="findRecentWinCounts" resultType="RankingDto">
+        SELECT
+            b.winner_restaurant_id AS restaurantId,
+            COUNT(*)               AS winCount
+        FROM battles b
+        WHERE b.status = 'CLOSED'
+          AND b.winner_restaurant_id IS NOT NULL
+          AND b.battle_date &gt;= #{from}
+        GROUP BY b.winner_restaurant_id
+    </select>
+
+    <!--
+        배틀 목록 + 투표 수.
+        JPA 로 하면 배틀마다 투표 수를 세는 질의가 붙어 배틀 수만큼 늘어난다.
+    -->
+    <select id="findBattleSummaries" resultType="ParticipationDto">
+        SELECT
+            b.id          AS battleId,
+            b.battle_date AS battleDate,
+            w.name        AS winnerName,
+            COALESCE(c.cand_count, 0)  AS candidateCount,
+            COALESCE(v.vote_count, 0)  AS voterCount
+        FROM battles b
+        LEFT JOIN restaurants w ON w.id = b.winner_restaurant_id
+        LEFT JOIN (SELECT battle_id, COUNT(*) AS cand_count FROM candidates GROUP BY battle_id) c
+               ON c.battle_id = b.id
+        LEFT JOIN (SELECT battle_id, COUNT(*) AS vote_count FROM votes GROUP BY battle_id) v
+               ON v.battle_id = b.id
+        ORDER BY b.battle_date DESC
+    </select>
+
+    <!-- 분석 1 — 식당 종합 랭킹 -->
+    <select id="findRanking" resultType="RankingDto">
+        SELECT
+            r.id       AS restaurantId,
+            r.name     AS restaurantName,
+            r.category AS category,
+            COALESCE(w.win_count, 0)   AS winCount,
+            COALESCE(v.vote_count, 0)  AS totalVotes,
+            COALESCE(c.cand_count, 0)  AS candidateCount,
+            COALESCE(rv.avg_score, 0)  AS avgScore,
+            CASE WHEN COALESCE(c.cand_count, 0) = 0 THEN 0
+                 ELSE ROUND(COALESCE(w.win_count, 0) * 100.0 / c.cand_count, 1)
+            END AS winRate
+        FROM restaurants r
+        LEFT JOIN (<include refid="winAgg"/>)    w  ON w.restaurant_id  = r.id
+        LEFT JOIN (<include refid="reviewAgg"/>) rv ON rv.restaurant_id = r.id
+        LEFT JOIN (
+            SELECT restaurant_id, COUNT(*) AS cand_count
+            FROM candidates GROUP BY restaurant_id
+        ) c ON c.restaurant_id = r.id
+        LEFT JOIN (
+            SELECT ca.restaurant_id, COUNT(*) AS vote_count
+            FROM votes vo JOIN candidates ca ON ca.id = vo.candidate_id
+            GROUP BY ca.restaurant_id
+        ) v ON v.restaurant_id = r.id
+        -- 한 번도 후보로 오른 적 없는 식당은 순위를 매길 근거가 없다.
+        -- 전부 0점으로 나열되면 순위표를 읽기 어렵다.
+        WHERE COALESCE(c.cand_count, 0) > 0
+        ORDER BY winCount DESC, totalVotes DESC, avgScore DESC
+    </select>
+
+    <!-- 분석 2 — 부서별 취향 -->
+    <select id="findDepartmentTaste" resultType="DepartmentTasteDto">
+        SELECT
+            m.department AS department,
+            r.category   AS category,
+            COUNT(*)     AS voteCount,
+            ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY m.department), 1) AS sharePercent
+        FROM votes v
+        JOIN members     m  ON m.id  = v.member_id
+        JOIN candidates  c  ON c.id  = v.candidate_id
+        JOIN restaurants r  ON r.id  = c.restaurant_id
+        GROUP BY m.department, r.category
+        ORDER BY m.department, voteCount DESC
+    </select>
+
+    <!-- 분석 3 — 요일별 인기 분류 -->
+    <select id="findWeekdayTrend" resultType="WeekdayTrendDto">
+        SELECT
+            DAY_OF_WEEK(b.battle_date) AS weekday,
+            CASE DAY_OF_WEEK(b.battle_date)
+                WHEN 1 THEN '일요일' WHEN 2 THEN '월요일' WHEN 3 THEN '화요일'
+                WHEN 4 THEN '수요일' WHEN 5 THEN '목요일' WHEN 6 THEN '금요일'
+                ELSE '토요일'
+            END        AS weekdayName,
+            r.category AS category,
+            COUNT(*)   AS voteCount
+        FROM votes v
+        JOIN battles     b ON b.id = v.battle_id
+        JOIN candidates  c ON c.id = v.candidate_id
+        JOIN restaurants r ON r.id = c.restaurant_id
+        GROUP BY DAY_OF_WEEK(b.battle_date), r.category
+        ORDER BY weekday, voteCount DESC
+    </select>
+
+    <!-- 분석 4 — 개인 편식 지수 -->
+    <select id="findPickyIndex" resultType="PickyIndexDto">
+        SELECT
+            t.member_id   AS memberId,
+            t.name        AS memberName,
+            t.department  AS department,
+            t.total_votes AS totalVotes,
+            t.category    AS topCategory,
+            t.cat_votes   AS topCategoryVotes,
+            ROUND(t.cat_votes * 100.0 / t.total_votes, 1) AS pickyPercent
+        FROM (
+            SELECT
+                m.id AS member_id, m.name AS name, m.department AS department,
+                r.category AS category,
+                COUNT(*) AS cat_votes,
+                SUM(COUNT(*)) OVER (PARTITION BY m.id) AS total_votes,
+                ROW_NUMBER() OVER (PARTITION BY m.id ORDER BY COUNT(*) DESC, r.category) AS rn
+            FROM votes v
+            JOIN members     m ON m.id = v.member_id
+            JOIN candidates  c ON c.id = v.candidate_id
+            JOIN restaurants r ON r.id = c.restaurant_id
+            GROUP BY m.id, m.name, m.department, r.category
+        ) t
+        WHERE t.rn = 1
+        ORDER BY pickyPercent DESC, totalVotes DESC
+    </select>
+
+    <!-- 분석 5 — 배틀별 투표 참여율 -->
+    <select id="findParticipation" resultType="ParticipationDto">
+        SELECT
+            b.id          AS battleId,
+            b.battle_date AS battleDate,
+            w.name        AS winnerName,
+            COALESCE(c.cand_count, 0)  AS candidateCount,
+            COALESCE(v.voter_count, 0) AS voterCount,
+            (SELECT COUNT(*) FROM members) AS memberCount,
+            ROUND(COALESCE(v.voter_count, 0) * 100.0
+                  / NULLIF((SELECT COUNT(*) FROM members), 0), 1) AS participationPercent
+        FROM battles b
+        LEFT JOIN restaurants w ON w.id = b.winner_restaurant_id
+        LEFT JOIN (
+            SELECT battle_id, COUNT(*) AS cand_count FROM candidates GROUP BY battle_id
+        ) c ON c.battle_id = b.id
+        LEFT JOIN (
+            SELECT battle_id, COUNT(DISTINCT member_id) AS voter_count FROM votes GROUP BY battle_id
+        ) v ON v.battle_id = b.id
+        ORDER BY b.battle_date DESC
+    </select>
+
+    <!-- 분석 6 — 분류별 득표 점유율 -->
+    <select id="findCategoryShare" resultType="CategoryShareDto">
+        SELECT
+            r.category AS category,
+            COALESCE(v.vote_count, 0) AS voteCount,
+            COALESCE(w.win_count, 0)  AS winCount,
+            CASE WHEN (SELECT COUNT(*) FROM votes) = 0 THEN 0
+                 ELSE ROUND(COALESCE(v.vote_count, 0) * 100.0
+                            / (SELECT COUNT(*) FROM votes), 1)
+            END AS sharePercent
+        FROM (SELECT DISTINCT category FROM restaurants) r
+        LEFT JOIN (
+            SELECT re.category, COUNT(*) AS vote_count
+            FROM votes vo
+            JOIN candidates ca ON ca.id = vo.candidate_id
+            JOIN restaurants re ON re.id = ca.restaurant_id
+            GROUP BY re.category
+        ) v ON v.category = r.category
+        LEFT JOIN (
+            SELECT re.category, COUNT(*) AS win_count
+            FROM battles b
+            JOIN restaurants re ON re.id = b.winner_restaurant_id
+            WHERE b.status = 'CLOSED'
+            GROUP BY re.category
+        ) w ON w.category = r.category
+        ORDER BY voteCount DESC, r.category
+    </select>
+
+</mapper>
