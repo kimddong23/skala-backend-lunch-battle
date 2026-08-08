@@ -1,6 +1,6 @@
 package com.skala.lunch;
 
-import com.skala.lunch.service.Maze;
+import com.skala.lunch.race.maze.Maze;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

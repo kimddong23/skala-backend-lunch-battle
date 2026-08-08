@@ -6,7 +6,7 @@
     resultType 은 application.yml 의 type-aliases-package 에서 찾는다.
     별칭을 못 찾으면 기동 자체가 실패하므로 오타는 즉시 드러난다.
 -->
-<mapper namespace="com.skala.lunch.mapper.LunchMapper">
+<mapper namespace="com.skala.lunch.analysis.LunchMapper">
 
     <!-- 식당별 평점 집계 (여러 곳에서 재사용) -->
     <sql id="reviewAgg">

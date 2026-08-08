@@ -1,12 +1,13 @@
 package com.skala.lunch;
 
-import com.skala.lunch.dto.BattleDto;
-import com.skala.lunch.dto.RaceDto;
-import com.skala.lunch.dto.VoteRequestDto;
-import com.skala.lunch.entity.Battle;
-import com.skala.lunch.repository.*;
-import com.skala.lunch.service.BattleService;
-import com.skala.lunch.service.RaceService;
+import com.skala.lunch.battle.BattleDto;
+import com.skala.lunch.race.RaceDto;
+import com.skala.lunch.battle.VoteRequestDto;
+import com.skala.lunch.battle.Battle;
+import com.skala.lunch.battle.BattleRepository;
+import com.skala.lunch.battle.CandidateRepository;
+import com.skala.lunch.battle.BattleService;
+import com.skala.lunch.race.RaceService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
