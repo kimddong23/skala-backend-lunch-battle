@@ -63,8 +63,8 @@ management:
 
 info:
   app:
-    name: 우리 회사 점심 정하기
-    description: 점심 메뉴 배틀 - 투표로 오늘의 점심을 정한다
+    name: 런치 배틀
+    description: 후보 메뉴가 햄스터로 미로를 달려 오늘의 점심을 정한다
     version: 1.0.0
 
 # 배틀 운영 규칙 (코드에 흩어놓지 않고 한곳에서 관리)

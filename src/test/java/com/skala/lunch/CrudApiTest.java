@@ -188,7 +188,12 @@ class CrudApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"))
                 .andExpect(jsonPath("$.components.db.status").value("UP"));
+        // 표시 문구를 박아 두면 이름을 다듬을 때마다 테스트가 깨진다.
+        // info 가 앱 정보를 실어 나르는지, 버전이 빌드와 맞는지를 본다.
         mockMvc.perform(get("/actuator/info"))
-                .andExpect(jsonPath("$.app.name").value("우리 회사 점심 정하기"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.app.name").isNotEmpty())
+                .andExpect(jsonPath("$.app.description").isNotEmpty())
+                .andExpect(jsonPath("$.app.version").value("1.0.0"));
     }
 }

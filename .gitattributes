@@ -1,0 +1,10 @@
+# 개행 문자를 도구가 임의로 바꾸지 않게 못 박는다.
+* text=auto eol=lf
+
+# 윈도우 배치 파일은 CRLF 여야 실행된다.
+*.bat text eol=crlf
+
+# 바이너리
+*.jar binary
+*.png binary
+*.pdf binary
