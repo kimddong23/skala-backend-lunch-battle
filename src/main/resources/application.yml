@@ -72,10 +72,6 @@ lunch:
   battle:
     # 투표 마감 시각 (기본값)
     default-close-time: "11:30"
-    # 최근 며칠 안에 우승한 식당에 불이익을 준다
-    recent-window-days: 7
-    # "또 그거야?" 감점 — 최근 우승 1회당 깎는 점수
-    repeat-penalty: 2
 
 server:
   port: 8080

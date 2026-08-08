@@ -22,9 +22,6 @@ public interface LunchMapper {
     /** 식당 목록 + 평점·리뷰수·우승수를 한 번에. (N+1 제거용) */
     List<RestaurantSummaryDto> findRestaurantSummaries(@Param("activeOnly") boolean activeOnly);
 
-    /** 최근 기간의 식당별 우승 횟수. 배틀 화면의 감점 계산에 쓴다. */
-    List<RankingDto> findRecentWinCounts(@Param("from") LocalDate from,
-                                        @Param("to") LocalDate to);
 
     /** 배틀 목록 + 투표수·후보수를 한 번에. (N+1 제거용) */
     List<ParticipationDto> findBattleSummaries();

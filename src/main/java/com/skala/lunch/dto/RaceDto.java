@@ -66,8 +66,6 @@ public class RaceDto {
         /** 응원으로 오른 판단력. */
         private Double cheerBonus;
 
-        /** 최근 우승으로 깎인 발놀림. */
-        private Double handicap;
 
         private Integer voteCount;
         private Integer rank;

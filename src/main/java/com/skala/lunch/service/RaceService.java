@@ -5,7 +5,6 @@ import com.skala.lunch.entity.*;
 import com.skala.lunch.exception.BadRequestException;
 import com.skala.lunch.exception.ConflictException;
 import com.skala.lunch.exception.NotFoundException;
-import com.skala.lunch.mapper.LunchMapper;
 import com.skala.lunch.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.time.LocalDate;
 import java.util.*;
 
 /**
@@ -26,14 +24,10 @@ import java.util.*;
  * 미로의 최단 경로는 BFS 로 미리 구해 두고, 햄스터는 매 걸음
  * 그 길을 따를지(판단력) 아무 데나 갈지를 뽑는다.
  *
- * 이렇게 두는 이유가 있다. 순전히 운으로 이기는 경주라면 투표도 감점도
- * 장식일 뿐이다. 여기서는
- * <ul>
- *   <li>응원(득표)은 <b>판단력</b>을 올린다 — 표를 받은 메뉴는 길을 더 잘 안다</li>
- *   <li>최근 우승은 <b>발놀림</b>을 떨어뜨린다 — 배가 불러 굼뜨다</li>
- * </ul>
- * 둘 다 결과에 실제로 영향을 주되 결정하지는 못한다. 표를 몰아줘도
- * 길치 햄스터가 요행으로 지름길에 들어서면 뒤집힌다.
+ * 이렇게 두는 이유가 있다. 순전히 운으로 이기는 경주라면 투표 화면은 장식일 뿐이다.
+ * 여기서 <b>응원(득표)은 판단력을 올린다</b> — 표를 받은 메뉴는 갈림길에서 옳은 쪽을
+ * 더 자주 고른다. 다만 결정하지는 못한다. 표를 몰아줘도 길치 햄스터가 요행으로
+ * 지름길에 들어서면 뒤집힌다.
  */
 @Slf4j
 @Service
@@ -41,16 +35,23 @@ import java.util.*;
 public class RaceService {
 
     /** 미로 크기. 홀수로 두어야 바깥 벽이 반듯하게 떨어진다. */
-    public static final int COLS = 21, ROWS = 11;
+    public static final int COLS = 25, ROWS = 13;
 
-    /** 한 경기의 최대 걸음 수. 이 안에 못 나오면 강제 종료한다. */
-    public static final int MAX_TICKS = 400;
+    /**
+     * 한 경기의 최대 걸음 수.
+     *
+     * 미로가 커지면 헤매는 폭도 같이 커진다. 상한이 빠듯하면 길치 햄스터가
+     * 출구를 못 찾은 채로 경기가 끝나 화면에 미완주로 남는다.
+     */
+    public static final int MAX_TICKS = 700;
 
-    /** 응원이 판단력에 더할 수 있는 최대치. */
-    private static final double MAX_CHEER = 0.10;
-
-    /** 최근 우승 1회당 발놀림에서 깎는 값. */
-    private static final double HANDICAP_PER_WIN = 0.06;
+    /**
+     * 응원이 판단력에 더할 수 있는 최대치.
+     *
+     * 출전 명단 화면이 "내 표가 판단력을 얼마나 올리는지" 를 미리 보여 주므로
+     * 그쪽에서도 같은 값을 봐야 한다. 화면이 따로 들고 있으면 한쪽만 바뀐다.
+     */
+    public static final double MAX_CHEER = 0.10;
 
     // 스탯이 뽑히는 범위. 한줄평(RaceComments)이 이 값을 보고 기준을 잡는다.
     // 범위와 판정 기준을 각자 들고 있으면 한쪽만 바뀌었을 때 판정이 조용히
@@ -61,8 +62,6 @@ public class RaceService {
     private final RaceRepository raceRepository;
     private final BattleRepository battleRepository;
     private final CandidateRepository candidateRepository;
-    private final LunchMapper lunchMapper;
-    private final BattleRules rules;
 
     /**
      * 경주를 진행한다. 배틀당 한 번만 달릴 수 있다.
@@ -108,10 +107,9 @@ public class RaceService {
     /**
      * 경주를 취소하고 배틀을 다시 연다 — "다시 하기".
      *
-     * 후보와 표는 그대로 두고 경주 기록만 지운다. 우승도 함께 지워지므로
-     * 그 우승 때문에 붙었던 감점도 같이 되돌아간다 (최근 우승 집계가
-     * battles.winner_restaurant_id 를 보기 때문이다). 기록만 지우고 우승을
-     * 남겨 두면 다시 달릴 때마다 없던 감점이 쌓인다.
+     * 후보와 표는 그대로 두고 경주 기록만 지운다. 우승 기록도 같이 지워
+     * 배틀을 경주 전 상태로 온전히 되돌린다 — 기록만 지우고 우승을 남기면
+     * 랭킹 집계에 달리지도 않은 우승이 쌓인다.
      */
     @Transactional
     public void reset(Long battleId) {
@@ -146,7 +144,7 @@ public class RaceService {
         List<Runner> runners = new ArrayList<>();
         for (RaceLane lane : race.getLanes()) {
             runners.add(new Runner(lane.getCandidate(), lane.getSense(), lane.getPace(),
-                    lane.getCheerBonus(), lane.getHandicap()));
+                    lane.getCheerBonus()));
         }
         // 저장된 레인은 순위 순으로 들어 있다. 주행은 출전 순서대로 난수를 뽑으므로
         // 처음 달릴 때와 같은 순서로 되돌려 놓아야 같은 경기가 재현된다.
@@ -166,21 +164,17 @@ public class RaceService {
     // ── 출전 준비 ───────────────────────────────────────────
 
     private List<Runner> lineUp(List<Candidate> candidates, Random random) {
-        Map<Long, Long> recentWins = recentWinMap();
         int totalVotes = candidates.stream().mapToInt(Candidate::getVoteCount).sum();
 
         List<Runner> runners = new ArrayList<>();
         for (Candidate c : candidates) {
-            long wins = recentWins.getOrDefault(c.getRestaurant().getId(), 0L);
-
             double cheer = totalVotes == 0 ? 0.0
                     : MAX_CHEER * c.getVoteCount() / totalVotes;
-            double load = wins * HANDICAP_PER_WIN;
 
             double sense = SENSE_MIN + random.nextDouble() * SENSE_SPAN;
             double pace = PACE_MIN + random.nextDouble() * PACE_SPAN;
 
-            runners.add(new Runner(c, round2(sense), round2(pace), round2(cheer), round2(load)));
+            runners.add(new Runner(c, round2(sense), round2(pace), round2(cheer)));
         }
         return runners;
     }
@@ -222,8 +216,7 @@ public class RaceService {
                     continue;
                 }
 
-                double pace = Math.max(0.35, r.pace - r.handicap);
-                if (random.nextDouble() > pace) {
+                if (random.nextDouble() > r.pace) {
                     r.path.add(r.cell);            // 머뭇거림
                     continue;
                 }
@@ -289,7 +282,7 @@ public class RaceService {
                     .race(race)
                     .candidate(r.candidate)
                     .sense(r.sense).pace(r.pace)
-                    .cheerBonus(r.cheerBonus).handicap(r.handicap)
+                    .cheerBonus(r.cheerBonus)
                     .steps(r.steps)
                     .finishTick(r.finishTick).rank(r.rank)
                     .build());
@@ -313,14 +306,14 @@ public class RaceService {
                         .restaurantName(r.candidate.getRestaurant().getName())
                         .category(r.candidate.getRestaurant().getCategory().name())
                         .sense(r.sense).pace(r.pace)
-                        .cheerBonus(r.cheerBonus).handicap(r.handicap)
+                        .cheerBonus(r.cheerBonus)
                         .voteCount(r.candidate.getVoteCount())
                         .rank(r.rank).finishTick(r.finishTick)
                         .steps(r.steps)
                         .efficiency(r.steps == 0 ? 0.0
                                 : round1(course.optimalLength * 100.0 / r.steps))
                         .path(r.path)
-                        .scouting(RaceComments.scouting(r.sense, r.pace, r.cheerBonus, r.handicap))
+                        .scouting(RaceComments.scouting(r.sense, r.pace, r.cheerBonus))
                         .build())
                 .toList();
 
@@ -341,14 +334,6 @@ public class RaceService {
                 .headline(RaceComments.headline(won, runners, course.optimalLength))
                 .lanes(lanes)
                 .build();
-    }
-
-    private Map<Long, Long> recentWinMap() {
-        LocalDate from = LocalDate.now().minusDays(rules.getRecentWindowDays());
-        Map<Long, Long> map = new HashMap<>();
-        lunchMapper.findRecentWinCounts(from, LocalDate.now()).forEach(r ->
-                map.put(r.getRestaurantId(), r.getWinCount() == null ? 0L : r.getWinCount()));
-        return map;
     }
 
     private static double round2(double v) {
@@ -381,7 +366,7 @@ public class RaceService {
     /** 미로를 달리는 햄스터 한 마리의 상태. */
     static class Runner {
         final Candidate candidate;
-        final double sense, pace, cheerBonus, handicap;
+        final double sense, pace, cheerBonus;
         final List<Integer> path = new ArrayList<>();
         int cell;
         int previous = -1;
@@ -389,13 +374,11 @@ public class RaceService {
         Integer finishTick;
         int rank;
 
-        Runner(Candidate candidate, double sense, double pace,
-               double cheerBonus, double handicap) {
+        Runner(Candidate candidate, double sense, double pace, double cheerBonus) {
             this.candidate = candidate;
             this.sense = sense;
             this.pace = pace;
             this.cheerBonus = cheerBonus;
-            this.handicap = handicap;
         }
     }
 }

@@ -37,7 +37,7 @@ public class BattleController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "배틀 현황 조회", description = "후보별 득표·감점·최종 점수 포함")
+    @Operation(summary = "배틀 현황 조회", description = "후보별 득표·득표율 포함")
     public ResponseEntity<BattleDto> get(@PathVariable Long id) {
         return ResponseEntity.ok(battleService.getBattle(id));
     }
@@ -80,7 +80,7 @@ public class BattleController {
 
     @PostMapping("/{id}/close")
     @Operation(summary = "마감하고 우승 확정",
-            description = "순위 = 득표 - 최근우승 감점. 동점이면 평점 높은 쪽, 그다음 가까운 쪽")
+            description = "득표가 가장 많은 후보가 우승. 동점이면 평점 높은 쪽, 그다음 가까운 쪽")
     public ResponseEntity<BattleDto> close(@PathVariable Long id) {
         return ResponseEntity.ok(battleService.closeBattle(id));
     }

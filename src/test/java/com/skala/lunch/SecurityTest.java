@@ -46,7 +46,7 @@ class SecurityTest {
         Pattern unescaped = Pattern.compile(
                 "\\$\\{(?!esc\\()[A-Za-z_][A-Za-z0-9_]*\\."
                         + "(restaurantName|name|category|department|addedByName"
-                        + "|scouting|penaltyNote|verdict|memberName|winnerName|comment)\\b");
+                        + "|scouting|verdict|memberName|winnerName|comment)\\b");
 
         StringBuilder found = new StringBuilder();
         Matcher b = block.matcher(html);

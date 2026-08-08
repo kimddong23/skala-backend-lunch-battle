@@ -21,11 +21,10 @@ import java.util.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * 경주가 정말 무작위인지, 그리고 <b>응원과 감점이 실제로 작동하는지</b> 확인한다.
+ * 경주가 정말 무작위인지, 그리고 <b>응원이 실제로 작동하는지</b> 확인한다.
  *
- * 뒤쪽이 더 중요하다. 결과가 순전히 운으로 갈리면 투표 화면도 감점 규칙도
- * 있으나 마나 한 장식이 된다. 그래서 "표를 받은 쪽이 실제로 길을 덜 헤매는가",
- * "최근에 이긴 쪽이 실제로 불리한가" 를 숫자로 확인한다.
+ * 뒤쪽이 더 중요하다. 결과가 순전히 운으로 갈리면 투표 화면은 있으나 마나 한
+ * 장식이 된다. 그래서 "표를 받은 쪽이 실제로 길을 덜 헤매는가" 를 숫자로 확인한다.
  */
 @SpringBootTest
 @Transactional
@@ -38,7 +37,6 @@ class RaceFairnessTest {
     @Autowired BattleService battleService;
     @Autowired BattleRepository battleRepository;
     @Autowired CandidateRepository candidateRepository;
-    @Autowired RestaurantRepository restaurantRepository;
 
     /** 후보 5개짜리 배틀. withVotes 면 첫 후보에만 표를 몰아준다. */
     private Long freshBattle(int index, boolean withVotes) {
@@ -139,43 +137,6 @@ class RaceFairnessTest {
                 .isGreaterThan(plain);
     }
 
-    @Test
-    @DisplayName("최근에 이긴 메뉴는 실제로 불리하다 — 감점이 장식이 아니다")
-    void 감점은_실제로_불리하다() {
-        // 초기 데이터가 이미 최근 우승 이력을 깔아 둔다 (식당 4·7).
-        // 새로 심으면 하루 1배틀 제약과 부딪히므로 있는 이력을 그대로 쓴다.
-        String loadedName = restaurantRepository.findById(4L).orElseThrow().getName();
-
-        int loadedWins = 0;
-        double loadedTicks = 0, otherTicks = 0;
-        int loadedN = 0, otherN = 0;
-
-        for (int i = 0; i < ROUNDS; i++) {
-            RaceDto race = raceService.run(freshBattle(3000 + i, false));
-            for (RaceDto.LaneDto lane : race.getLanes()) {
-                boolean loaded = lane.getRestaurantName().equals(loadedName);
-                if (loaded) {
-                    assertThat(lane.getHandicap()).as("짐이 실려 있어야 한다").isGreaterThan(0.0);
-                    loadedTicks += lane.getFinishTick();
-                    loadedN++;
-                    if (lane.getRank() == 1) loadedWins++;
-                } else if (lane.getHandicap() == 0.0) {
-                    // 짐을 진 다른 식당(7번)은 비교군에서 뺀다
-                    otherTicks += lane.getFinishTick();
-                    otherN++;
-                }
-            }
-        }
-
-        double loadedAvg = loadedTicks / loadedN, otherAvg = otherTicks / otherN;
-        double winRate = loadedWins * 100.0 / ROUNDS;
-        System.out.printf("── 최근 우승자(%s) ──%n", loadedName);
-        System.out.printf("   탈출까지 평균 %.1f걸음 (짐 없는 쪽 %.1f걸음)%n", loadedAvg, otherAvg);
-        System.out.printf("   우승률 %.1f%% (짐이 없다면 20%%)%n", winRate);
-
-        assertThat(loadedAvg).as("짐을 진 쪽이 더 오래 걸린다").isGreaterThan(otherAvg);
-        assertThat(winRate).as("짐을 진 쪽의 우승률이 낮아진다").isLessThan(20.0);
-    }
 
     @Test
     @DisplayName("같은 시드면 미로도 주행도 그대로 재현된다")

@@ -46,8 +46,12 @@ dependencies {
 }
 
 // 도구가 만드는 상태 디렉터리가 리소스로 딸려 들어가는 것을 막는다
+// 편집기·도구가 만든 숨김 폴더가 산출물에 섞이지 않게 한다.
+// '.omc/**' 만 쓰면 리소스 최상위만 걸러져 static/.omc/... 처럼 하위에 있는 것은
+// 그대로 jar 에 실린다. 실제로 7개 항목이 들어가 있었다. 깊이에 상관없이 거른다.
 processResources {
-    exclude '.omc/**'
+    exclude '**/.omc/**'
+    exclude '**/.DS_Store'
 }
 
 tasks.named('test') {

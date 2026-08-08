@@ -37,9 +37,6 @@ public class RaceLane {
     @Column(name = "cheer_bonus", nullable = false)
     private Double cheerBonus;
 
-    /** 최근 우승으로 깎인 발놀림. 배가 부르면 굼뜨다. */
-    @Column(nullable = false)
-    private Double handicap;
 
     /** 실제로 내디딘 걸음 수. 최단 경로와 견주면 얼마나 헤맸는지 나온다. */
     @Column(nullable = false)

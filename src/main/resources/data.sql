@@ -32,7 +32,7 @@ INSERT INTO restaurants (name, category, walk_minutes, price, active, created_at
 ('국수나무그늘',       '한식',       3,  8000,  TRUE, CURRENT_TIMESTAMP),
 ('사장님이미쳤어요',   '한식',       15, 6000,  FALSE, CURRENT_TIMESTAMP);
 
--- 지난 배틀 5건 (통계·"또 그거야?" 감점이 동작하도록 이력을 깔아둠)
+-- 지난 배틀 5건 (랭킹·요일별·참여율 통계가 비어 보이지 않도록 이력을 깔아둠)
 INSERT INTO battles (battle_date, status, closes_at, winner_restaurant_id, closed_at, created_at) VALUES
 (DATEADD('DAY', -5, CURRENT_DATE), 'CLOSED', DATEADD('DAY', -5, CURRENT_TIMESTAMP), 2,  DATEADD('DAY', -5, CURRENT_TIMESTAMP), DATEADD('DAY', -5, CURRENT_TIMESTAMP)),
 (DATEADD('DAY', -4, CURRENT_DATE), 'CLOSED', DATEADD('DAY', -4, CURRENT_TIMESTAMP), 7,  DATEADD('DAY', -4, CURRENT_TIMESTAMP), DATEADD('DAY', -4, CURRENT_TIMESTAMP)),

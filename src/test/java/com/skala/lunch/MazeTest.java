@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("미로")
 class MazeTest {
 
-    private static final int COLS = 21, ROWS = 11;
+    private static final int COLS = 25, ROWS = 13;
 
     @Test
     @DisplayName("모든 칸에 갈 수 있다 — 끊긴 구역이 생기면 햄스터가 갇힌다")

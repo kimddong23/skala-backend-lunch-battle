@@ -128,8 +128,10 @@
   .bar{height:13px;background:#efe9d8;border:2px solid var(--ink);border-radius:999px;
        overflow:hidden}
   .bar > span{display:block;height:100%;background:var(--flame);transition:width .4s ease}
-  .penalty{background:var(--flame);color:#fff;border-radius:9px;padding:6px 10px;
-           font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+  .cand .cheers .arrow{color:var(--dim);font-weight:900}
+  .cand .cheers .gain{font-size:13.5px;font-weight:800;color:var(--mint);
+                      background:#e7f8f1;border:2px solid var(--mint);
+                      border-radius:999px;padding:2px 9px}
   .cand .btn{width:100%;background:var(--mint);color:#fff}
   .empty{grid-column:1/-1;text-align:center;color:var(--dim);font-size:14px;
          padding:26px 10px;border:3px dashed var(--line);border-radius:16px}
@@ -149,6 +151,20 @@
   tbody tr:last-child td{border-bottom:none}
   td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
   tr.win{background:var(--sun)!important;font-weight:800}
+
+  /* 상위 3위 강조. 줄무늬(nth-child)보다 뒤에 두고 선택자를 한 단계 더 좁혀
+     짝수 행에서도 강조가 밀리지 않게 한다. */
+  .twrap tbody tr.top1{background:var(--sun);font-weight:800}
+  .twrap tbody tr.top2{background:#f1efe6;font-weight:700}
+  .twrap tbody tr.top3{background:#f8ecdd;font-weight:700}
+  .twrap tbody tr.top1 td:first-child{box-shadow:inset 5px 0 0 #e0a300}
+  .twrap tbody tr.top2 td:first-child{box-shadow:inset 5px 0 0 #8d8d8d}
+  .twrap tbody tr.top3 td:first-child{box-shadow:inset 5px 0 0 #b06a2c}
+  td.rankcell{display:flex;align-items:center;gap:7px}
+  td.rankcell .ic{font-size:16px}
+  .twrap tbody tr.top1 .ic{color:#e0a300}
+  .twrap tbody tr.top2 .ic{color:#8d8d8d}
+  .twrap tbody tr.top3 .ic{color:#b06a2c}
   td.note{white-space:normal;min-width:200px;color:var(--dim);font-size:12.5px}
   td.mdl .ic{font-size:17px}
 
@@ -183,8 +199,6 @@
     <div class="hud">
       <span id="battleInfo">불러오는 중…</span>
       <span class="spacer"></span>
-      <button class="btn sm" id="speedBtn">
-        <svg class="ic"><use href="#bi-speedometer2"/></svg><span id="speedLabel">보통</span></button>
       <button class="btn go" id="raceBtn">
         <svg class="ic"><use href="#bi-play-fill"/></svg>경주 시작</button>
       <button class="btn again" id="againBtn" hidden>
@@ -249,10 +263,6 @@ const esc = v => String(v ?? '').replace(/[&<>"']/g,
 
 const icon = (name, cls) => `<svg class="ic${cls ? ' ' + cls : ''}"><use href="#bi-${name}"/></svg>`;
 
-/** 감점 안내 조각. 출력 지점을 한곳에 모아 이스케이프 누락을 눈에 띄게 한다. */
-const penaltyHtml = note => note
-  ? `<div class="penalty">${icon('exclamation-triangle-fill')}<span>${esc(note)}</span></div>` : '';
-
 let battle = null, members = [], restaurants = [];
 
 /** 알림. 자리를 차지하는 줄이라 본문을 가리지 않는다. */
@@ -282,8 +292,27 @@ async function loadBase(){
   ]);
   $('#voterSel').innerHTML = members
       .map(m => `<option value="${m.id}">${esc(m.name)} (${esc(m.department)})</option>`).join('');
-  $('#restSel').innerHTML = restaurants
-      .map(r => `<option value="${r.id}">${esc(r.name)} · ${esc(r.category)} · 도보${r.walkMinutes}분</option>`).join('');
+}
+
+/**
+ * 식당 선택지를 다시 채운다.
+ *
+ * 이미 출전한 식당은 빼 둔다. 남겨 두면 고를 수는 있는데 누르면 409 가 돌아와,
+ * 고를 수 있는 것처럼 보여 놓고 거절하는 셈이 된다.
+ */
+function fillRestaurantOptions(){
+  const taken = new Set((battle?.candidates || []).map(c => c.restaurantId));
+  const left = restaurants.filter(r => !taken.has(r.id));
+  const sel = $('#restSel');
+  const keep = sel.value;
+
+  sel.innerHTML = left.length
+    ? left.map(r => `<option value="${r.id}">${esc(r.name)} · ${esc(r.category)} · 도보${r.walkMinutes}분</option>`).join('')
+    : '<option value="">고를 수 있는 식당이 없습니다</option>';
+
+  if (left.some(r => String(r.id) === keep)) sel.value = keep;
+  sel.disabled = !left.length;
+  return left.length;
 }
 
 async function loadBattle(){
@@ -311,7 +340,8 @@ function render(){
     + (battle.winnerName ? ` · 우승 ${battle.winnerName}` : '');
   $('#voteChip').textContent = `응원 ${battle.totalVotes}표`;
   $('#comment').textContent = battle.comment || '—';
-  $('#addBtn').disabled = closed;
+  const canAdd = fillRestaurantOptions();
+  $('#addBtn').disabled = closed || !canAdd;
   $('#raceBtn').disabled = closed || cands.length < 2 || racing;
   $('#againBtn').hidden = !(raceState === 'done' || (closed && !racing));
   $('#stageChip').textContent =
@@ -347,10 +377,14 @@ function render(){
           <div class="meta">${esc(c.category)} · 도보 ${c.walkMinutes}분 · ${c.price.toLocaleString()}원 · ${esc(c.addedByName)} 추천</div>
         </div>
         <div class="bd">
-          <div class="cheers"><b class="mono">${c.voteCount}</b><span>표 · 득표율 ${c.sharePercent}% · 최종 ${c.finalScore}점</span></div>
+          <div class="cheers">
+            <b class="mono">${c.voteCount}</b><span>표</span>
+            <span class="arrow">→</span>
+            <span class="gain mono">판단력 +${c.cheerBonus.toFixed(2)}</span>
+          </div>
           <div class="bar"><span style="width:${(c.voteCount / max * 100).toFixed(0)}%;
                background:${LANE_COLORS[i % LANE_COLORS.length]}"></span></div>
-          ${penaltyHtml(c.penaltyNote)}
+          <div class="meta">득표율 ${c.sharePercent}% · 갈림길에서 옳은 쪽을 고를 확률이 그만큼 오릅니다</div>
           ${closed ? '' : `<button class="btn sm" data-vote="${c.id}">${icon('megaphone-fill')}이 메뉴 응원</button>`}
         </div>
       </div>`).join('');
@@ -391,14 +425,13 @@ let raceState = 'gate';       // gate · count · run · done
 let step = 0;                 // 진행한 걸음 (소수 = 칸 사이 보간)
 let anim = 0, rafId = null, confetti = [];
 
-/** 재생 속도. 한 걸음이 곧 한 칸이라 초당 걸음 수로 정한다. */
-const SPEEDS = [
-  {label:'느리게', mps: 5},
-  {label:'보통',   mps: 9},
-  {label:'빠르게', mps: 18},
-  {label:'아주 빠르게', mps: 34}
-];
-let speedIdx = 1;
+/**
+ * 재생 속도 (초당 걸음 수). 한 걸음이 곧 한 칸이다.
+ *
+ * 눈으로 따라갈 수 있으면서 지루하지 않은 값으로 고정한다.
+ * 화면 주사율과 무관해야 하므로 프레임이 아니라 흐른 시간으로 곱한다.
+ */
+const STEPS_PER_SEC = 7;
 
 function shade(hex, amt){
   const n = parseInt(hex.slice(1), 16);
@@ -527,8 +560,8 @@ function roundRect(x, y, w, h, r){
 
 // ── 미로 치수 ────────────────────────────────────
 function geo(){
-  const cols = raceData ? raceData.cols : 21;
-  const rows = raceData ? raceData.rows : 11;
+  const cols = raceData ? raceData.cols : 25;
+  const rows = raceData ? raceData.rows : 13;
   const avail = Math.max(320, cv.clientWidth || 880);
   // 칸 크기를 화면 폭에 맞춘다. 좁은 화면에서 통째로 축소되면 아무것도 안 보인다.
   const cell = Math.max(16, Math.min(40, Math.floor((avail - 34) / cols)));
@@ -749,7 +782,7 @@ function loop(now){
   anim += dt * 60;                       // 햄스터 동작도 시간 기준으로
 
   if (raceState === 'run'){
-    step += SPEEDS[speedIdx].mps * dt;
+    step += STEPS_PER_SEC * dt;
     if (step >= raceData.totalTicks){ step = raceData.totalTicks; finishRace(); }
   }
 
@@ -769,11 +802,6 @@ addEventListener('resize', () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => { drawScene(); if (confetti.length) startLoop(); }, 120);
 });
-
-$('#speedBtn').onclick = () => {
-  speedIdx = (speedIdx + 1) % SPEEDS.length;
-  $('#speedLabel').textContent = SPEEDS[speedIdx].label;
-};
 
 $('#raceBtn').onclick = async () => {
   try {
@@ -839,7 +867,7 @@ function finishRace(){
   $('#board').innerHTML = `<div class="twrap"><table>
     <thead><tr><th>순위</th><th>메뉴</th><th>스카우팅</th>
       <th class="n">판단력</th><th class="n">발놀림</th>
-      <th class="n">응원</th><th class="n">짐</th>
+      <th class="n">응원</th>
       <th class="n">걸음</th><th class="n">효율</th><th class="n">탈출</th></tr></thead>
     <tbody>${ranked.map((l, i) => `<tr class="${i === 0 ? 'win' : ''}">
       <td class="mdl" style="color:${medalColor[i] || 'inherit'}">${medals[i] ? icon(medals[i]) : (i + 1)}</td>
@@ -847,7 +875,6 @@ function finishRace(){
       <td class="note">${esc(l.scouting)}</td>
       <td class="n">${l.sense}</td><td class="n">${l.pace}</td>
       <td class="n">${l.cheerBonus > 0 ? '+' + l.cheerBonus : '–'}</td>
-      <td class="n">${l.handicap > 0 ? '−' + l.handicap : '–'}</td>
       <td class="n">${l.steps}</td>
       <td class="n">${l.efficiency}%</td>
       <td class="n">${l.finishTick ?? '실패'}</td></tr>`).join('')}
@@ -858,14 +885,29 @@ function finishRace(){
 }
 
 // ═══ 전적 기록실 ════════════════════════════════════════════
+/**
+ * 기록실 탭.
+ *
+ * ranked 는 "위에서부터 순위"인 표에만 준다. 요일별·부서별·참여율은
+ * 요일·부서·날짜 순으로 늘어놓은 것이라 첫 세 줄이 상위가 아니다.
+ * 거기에 메달을 붙이면 없는 순위를 있다고 말하는 셈이 된다.
+ */
 const TABS = [
-  {key:'ranking',          label:'식당 랭킹',   cols:[['rank','순위'],['restaurantName','식당'],['category','분류'],['winCount','우승',1],['totalVotes','득표',1],['winRate','우승률%',1],['avgScore','평점',1]]},
-  {key:'department-taste', label:'부서별 취향', cols:[['department','부서'],['category','분류'],['voteCount','표',1],['sharePercent','비중%',1]]},
-  {key:'picky-index',      label:'편식 지수',   cols:[['memberName','사원'],['department','부서'],['topCategory','최애'],['pickyPercent','편중%',1],['verdict','판정']]},
-  {key:'category-share',   label:'분류별 점유', cols:[['category','분류'],['voteCount','득표',1],['sharePercent','점유%',1],['winCount','우승',1]]},
-  {key:'weekday-trend',    label:'요일별',      cols:[['weekdayName','요일'],['category','분류'],['voteCount','표',1]]},
-  {key:'participation',    label:'참여율',      cols:[['battleDate','날짜'],['winnerName','우승'],['candidateCount','후보',1],['voterCount','투표',1],['participationPercent','참여%',1]]},
+  {key:'ranking',          label:'식당 랭킹',   ranked:true,
+   cols:[['rank','순위'],['restaurantName','식당'],['category','분류'],['winCount','우승',1],['totalVotes','득표',1],['winRate','우승률%',1],['avgScore','평점',1]]},
+  {key:'department-taste', label:'부서별 취향',
+   cols:[['department','부서'],['category','분류'],['voteCount','표',1],['sharePercent','비중%',1]]},
+  {key:'picky-index',      label:'편식 지수',   ranked:true,
+   cols:[['memberName','사원'],['department','부서'],['topCategory','최애'],['pickyPercent','편중%',1],['verdict','판정']]},
+  {key:'category-share',   label:'분류별 점유', ranked:true,
+   cols:[['category','분류'],['voteCount','득표',1],['sharePercent','점유%',1],['winCount','우승',1]]},
+  {key:'weekday-trend',    label:'요일별',
+   cols:[['weekdayName','요일'],['category','분류'],['voteCount','표',1]]},
+  {key:'participation',    label:'참여율',
+   cols:[['battleDate','날짜'],['winnerName','우승'],['candidateCount','후보',1],['voterCount','투표',1],['participationPercent','참여%',1]]},
 ];
+
+const MEDAL_ICON = ['trophy-fill', 'award-fill', 'award-fill'];
 
 $('#tabs').innerHTML = TABS.map((t, i) =>
   `<button class="btn sm ${i === 0 ? 'on' : ''}" data-tab="${t.key}">${t.label}</button>`).join('');
@@ -877,8 +919,13 @@ async function loadAnalysis(key){
   if (!rows.length){ $('#analysis').innerHTML = '<p class="empty">아직 쌓인 기록이 없습니다.</p>'; return; }
   $('#analysis').innerHTML = `<div class="twrap"><table>
     <thead><tr>${tab.cols.map(([, l, n]) => `<th class="${n ? 'n' : ''}">${l}</th>`).join('')}</tr></thead>
-    <tbody>${rows.map(r => `<tr>${tab.cols.map(([k, , n]) =>
-        `<td class="${n ? 'n' : ''}">${esc(r[k] ?? '-')}</td>`).join('')}</tr>`).join('')}
+    <tbody>${rows.map((r, i) => {
+      const medal = tab.ranked && i < 3 ? i : -1;
+      return `<tr class="${medal >= 0 ? 'top' + (medal + 1) : ''}">${tab.cols.map(([k, , n], ci) =>
+        `<td class="${n ? 'n' : ''}${ci === 0 && medal >= 0 ? ' rankcell' : ''}">`
+        + (ci === 0 && medal >= 0 ? icon(MEDAL_ICON[medal]) : '')
+        + `<span>${esc(r[k] ?? '-')}</span></td>`).join('')}</tr>`;
+    }).join('')}
     </tbody></table></div>`;
 }
 document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => loadAnalysis(b.dataset.tab));

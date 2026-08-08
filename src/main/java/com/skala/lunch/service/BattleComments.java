@@ -41,20 +41,6 @@ final class BattleComments {
         return totalVotes + "표 진행 중. 눈치 보지 말고 소신 투표하세요";
     }
 
-    /** 최근 우승 감점 안내. */
-    static String penaltyNote(long recentWins, int penalty) {
-        if (recentWins == 0) {
-            return null;
-        }
-        if (recentWins == 1) {
-            return "최근에 한 번 우승해서 " + penalty + "점 감점";
-        }
-        if (recentWins == 2) {
-            return "최근 두 번이나 먹었습니다. " + penalty + "점 감점";
-        }
-        return "최근 " + recentWins + "번 우승. 슬슬 질릴 때도 됐습니다 (" + penalty + "점 감점)";
-    }
-
     /** 편식 지수 판정. */
     static String pickyVerdict(double topCategoryRatio, String topCategory) {
         if (topCategoryRatio >= 0.8) {

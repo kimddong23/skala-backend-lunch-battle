@@ -211,9 +211,8 @@ class BattleApiTest {
     // ── 마감 ──
 
     @Test
-    @DisplayName("최근에 우승한 식당은 감점을 받아 최다 득표라도 질 수 있다")
-    void 반복_우승_감점() throws Exception {
-        // data.sql 기준 김치찌개의민족(2번)은 최근 3회 우승 → 감점 6점
+    @DisplayName("표만으로 마감하면 최다 득표가 이긴다")
+    void 득표로_마감() throws Exception {
         long kimchi = addCandidate(2, 1);
         long gukbap = addCandidate(1, 1);
 
@@ -221,17 +220,42 @@ class BattleApiTest {
         for (long m : new long[]{6, 7, 8, 9}) vote(m, gukbap);      // 4표
 
         mockMvc.perform(get("/api/battles/" + battleId))
-                .andExpect(jsonPath("$.candidates[0].restaurantName").value("할매국밥"))
-                .andExpect(jsonPath("$.candidates[0].finalScore").value(4))
-                .andExpect(jsonPath("$.candidates[1].restaurantName").value("김치찌개의민족"))
-                .andExpect(jsonPath("$.candidates[1].voteCount").value(5))
-                .andExpect(jsonPath("$.candidates[1].repeatPenalty").value(6))
-                .andExpect(jsonPath("$.candidates[1].finalScore").value(-1));
+                .andExpect(jsonPath("$.candidates[0].restaurantName").value("김치찌개의민족"))
+                .andExpect(jsonPath("$.candidates[0].voteCount").value(5))
+                .andExpect(jsonPath("$.candidates[1].restaurantName").value("할매국밥"))
+                .andExpect(jsonPath("$.candidates[1].voteCount").value(4));
 
         mockMvc.perform(post("/api/battles/" + battleId + "/close"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CLOSED"))
-                .andExpect(jsonPath("$.winnerName").value("할매국밥"));
+                .andExpect(jsonPath("$.winnerName").value("김치찌개의민족"));
+    }
+
+    @Test
+    @DisplayName("표를 많이 받을수록 예상 판단력이 오르고, 합은 최대 가산을 넘지 않는다")
+    void 응원_가산_표기() throws Exception {
+        long kimchi = addCandidate(2, 1);
+        long gukbap = addCandidate(1, 1);
+
+        for (long m : new long[]{1, 2, 3}) vote(m, kimchi);   // 3표
+        vote(4L, gukbap);                                     // 1표
+
+        // 3표 / 4표 → 0.10 x 0.75 = 0.075 → 0.08 (소수 둘째 자리 반올림)
+        mockMvc.perform(get("/api/battles/" + battleId))
+                .andExpect(jsonPath("$.candidates[0].restaurantName").value("김치찌개의민족"))
+                .andExpect(jsonPath("$.candidates[0].cheerBonus").value(0.08))
+                .andExpect(jsonPath("$.candidates[1].cheerBonus").value(0.03));
+    }
+
+    @Test
+    @DisplayName("표가 하나도 없으면 예상 판단력도 0이다 — 0으로 나누지 않는다")
+    void 무표_가산() throws Exception {
+        addCandidate(2, 1);
+        addCandidate(1, 1);
+
+        mockMvc.perform(get("/api/battles/" + battleId))
+                .andExpect(jsonPath("$.candidates[0].cheerBonus").value(0.0))
+                .andExpect(jsonPath("$.candidates[1].cheerBonus").value(0.0));
     }
 
     @Test

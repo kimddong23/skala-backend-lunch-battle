@@ -37,8 +37,7 @@ public class RaceController {
     @DeleteMapping
     @Operation(summary = "다시 하기",
             description = "경주 기록을 지우고 배틀을 다시 연다. 후보와 표는 그대로 두므로 "
-                        + "같은 참가자로 새 미로에서 다시 달릴 수 있다. "
-                        + "우승도 함께 지워져 그로 인한 감점도 되돌아간다")
+                        + "같은 참가자로 새 미로에서 다시 달릴 수 있다")
     public ResponseEntity<Void> reset(@PathVariable Long battleId) {
         raceService.reset(battleId);
         return ResponseEntity.noContent().build();

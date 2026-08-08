@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * 점심 배틀 진행.
  *
  * 하루에 배틀 하나, 사원 한 명당 한 표.
- * 최근에 우승한 식당은 감점을 받아 같은 메뉴가 계속 이기는 것을 막는다.
+ * 표는 그 자체로 우승을 정하지 않는다 — 미로 경주에서 판단력 가산으로 쓰인다.
  */
 @Slf4j
 @Service
@@ -150,7 +150,7 @@ public class BattleService {
                     .addedBy(member)
                     .voteCount(0)
                     .build());
-            return toCandidateDto(candidate, 0L, recentWinCount(restaurantId));
+            return toCandidateDto(candidate, 0L);
         } catch (DataIntegrityViolationException e) {
             // 유일 제약에 걸린 것 — 동시에 같은 식당을 올린 경우도 여기로 온다
             throw new ConflictException("이미 후보에 있는 식당입니다: " + restaurant.getName());
@@ -243,8 +243,11 @@ public class BattleService {
     /**
      * 마감하고 우승을 확정한다.
      *
-     * 순위는 (득표 수 - 최근 우승 감점) 으로 매긴다.
-     * 그래도 같으면 평점 높은 쪽, 그다음 가까운 쪽이 이긴다.
+     * 득표가 가장 많은 후보가 이긴다.
+     * 동점이면 평점 높은 쪽, 그다음 가까운 쪽이 이긴다.
+     *
+     * 화면은 이 경로 대신 미로 경주로 마감한다. 이쪽은 "경주 없이 표로만 정하기" 를
+     * 원할 때 쓰는 API 다.
      */
     @Transactional
     public BattleDto closeBattle(Long battleId) {
@@ -258,10 +261,9 @@ public class BattleService {
             throw new BadRequestException("후보가 없어 마감할 수 없습니다");
         }
 
-        Map<Long, Long> winMap = recentWinMap();
         Candidate winner = candidates.stream()
                 .max(Comparator
-                        .comparingInt((Candidate c) -> finalScore(c, winMap))
+                        .comparingInt(Candidate::getVoteCount)
                         .thenComparingDouble(c -> avgScore(c.getRestaurant().getId()))
                         .thenComparing(c -> -c.getRestaurant().getWalkMinutes()))
                 .orElseThrow();
@@ -278,29 +280,6 @@ public class BattleService {
     }
 
     // ── 내부 계산 ───────────────────────────────────────────
-
-    /**
-     * 최근 기간의 식당별 우승 횟수를 한 번에 읽는다.
-     *
-     * 후보마다 따로 세면 후보 수만큼 질의가 늘어난다.
-     * 요청당 한 번만 집계해 Map 으로 돌려쓴다.
-     */
-    private Map<Long, Long> recentWinMap() {
-        LocalDate from = LocalDate.now().minusDays(rules.getRecentWindowDays());
-        return lunchMapper.findRecentWinCounts(from, LocalDate.now()).stream()
-                .collect(Collectors.toMap(
-                        r -> r.getRestaurantId(),
-                        r -> r.getWinCount() == null ? 0L : r.getWinCount()));
-    }
-
-    private long recentWinCount(Long restaurantId) {
-        return recentWinMap().getOrDefault(restaurantId, 0L);
-    }
-
-    private int finalScore(Candidate candidate, Map<Long, Long> winMap) {
-        long wins = winMap.getOrDefault(candidate.getRestaurant().getId(), 0L);
-        return candidate.getVoteCount() - (int) wins * rules.getRepeatPenalty();
-    }
 
     private double avgScore(Long restaurantId) {
         return reviewRepository.findByRestaurantIdOrderByCreatedAtDesc(restaurantId).stream()
@@ -342,11 +321,9 @@ public class BattleService {
         if (withCandidates) {
             List<Candidate> candidates =
                     candidateRepository.findByBattleIdOrderByVoteCountDescIdAsc(battle.getId());
-            Map<Long, Long> winMap = recentWinMap();   // 후보마다 세지 않고 한 번만
             List<CandidateDto> dtos = candidates.stream()
-                    .map(c -> toCandidateDto(c, totalVotes,
-                            winMap.getOrDefault(c.getRestaurant().getId(), 0L)))
-                    .sorted(Comparator.comparingInt(CandidateDto::getFinalScore).reversed()
+                    .map(c -> toCandidateDto(c, totalVotes))
+                    .sorted(Comparator.comparingInt(CandidateDto::getVoteCount).reversed()
                             .thenComparing(CandidateDto::getRestaurantName))
                     .collect(Collectors.toList());
             builder.candidates(dtos);
@@ -358,10 +335,13 @@ public class BattleService {
         return builder.build();
     }
 
-    private CandidateDto toCandidateDto(Candidate c, long totalVotes, long recentWins) {
-        int penalty = (int) recentWins * rules.getRepeatPenalty();
+    private CandidateDto toCandidateDto(Candidate c, long totalVotes) {
         double share = totalVotes == 0 ? 0.0
                 : Math.round(c.getVoteCount() * 1000.0 / totalVotes) / 10.0;
+
+        // 지금 득표라면 경주에서 얼마를 받는지. 계산식은 RaceService 와 같아야 한다.
+        double cheer = totalVotes == 0 ? 0.0
+                : Math.round(RaceService.MAX_CHEER * c.getVoteCount() / totalVotes * 100.0) / 100.0;
 
         return CandidateDto.builder()
                 .id(c.getId())
@@ -373,9 +353,7 @@ public class BattleService {
                 .addedByName(c.getAddedBy().getName())
                 .voteCount(c.getVoteCount())
                 .sharePercent(share)
-                .repeatPenalty(penalty)
-                .finalScore(c.getVoteCount() - penalty)
-                .penaltyNote(BattleComments.penaltyNote(recentWins, penalty))
+                .cheerBonus(cheer)
                 .build();
     }
 }

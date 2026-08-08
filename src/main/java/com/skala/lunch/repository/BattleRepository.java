@@ -15,7 +15,7 @@ public interface BattleRepository extends JpaRepository<Battle, Long> {
     List<Battle> findByStatusOrderByBattleDateDesc(Battle.Status status);
     List<Battle> findAllByOrderByBattleDateDesc();
 
-    /** 최근 우승 식당 조회용 — "또 그거야?" 감점 계산에 쓴다. */
+    /** 기간 내 마감된 배틀 조회. */
     List<Battle> findByStatusAndBattleDateGreaterThanEqualOrderByBattleDateDesc(
             Battle.Status status, LocalDate from);
 

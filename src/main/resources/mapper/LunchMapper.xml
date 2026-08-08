@@ -49,19 +49,6 @@
         ORDER BY r.id
     </select>
 
-    <!-- 최근 N일 우승 횟수 — 배틀 화면의 "또 그거야?" 감점 계산 -->
-    <select id="findRecentWinCounts" resultType="RankingDto">
-        SELECT
-            b.winner_restaurant_id AS restaurantId,
-            COUNT(*)               AS winCount
-        FROM battles b
-        WHERE b.status = 'CLOSED'
-          AND b.winner_restaurant_id IS NOT NULL
-          -- 위아래를 모두 막는다. 상한이 없으면 미래 날짜로 만든 배틀까지
-          -- "최근에 먹은 것"으로 잡혀 감점이 끝없이 쌓인다.
-          AND b.battle_date BETWEEN #{from} AND #{to}
-        GROUP BY b.winner_restaurant_id
-    </select>
 
     <!--
         배틀 목록 + 투표 수.
@@ -130,22 +117,38 @@
     </select>
 
     <!-- 분석 3 — 요일별 인기 분류 -->
+    <!--
+        요일별 경향.
+
+        집계를 먼저 끝내고 요일 이름은 바깥에서 붙인다.
+        한 문장에 CASE DAY_OF_WEEK(b.battle_date) 와 GROUP BY DAY_OF_WEEK(b.battle_date) 를
+        같이 두면 H2 가 둘을 같은 식으로 보지 않는 실행 계획을 고르는 경우가 있어
+        "Column B.BATTLE_DATE must be in the GROUP BY list" 로 깨진다.
+        데이터가 적을 때는 통과하다가 표가 쌓이면 그때부터 500이 나므로
+        작은 표본만 보는 테스트로는 드러나지 않는다.
+    -->
     <select id="findWeekdayTrend" resultType="WeekdayTrendDto">
         SELECT
-            DAY_OF_WEEK(b.battle_date) AS weekday,
-            CASE DAY_OF_WEEK(b.battle_date)
+            t.weekday AS weekday,
+            CASE t.weekday
                 WHEN 1 THEN '일요일' WHEN 2 THEN '월요일' WHEN 3 THEN '화요일'
                 WHEN 4 THEN '수요일' WHEN 5 THEN '목요일' WHEN 6 THEN '금요일'
                 ELSE '토요일'
-            END        AS weekdayName,
-            r.category AS category,
-            COUNT(*)   AS voteCount
-        FROM votes v
-        JOIN battles     b ON b.id = v.battle_id
-        JOIN candidates  c ON c.id = v.candidate_id
-        JOIN restaurants r ON r.id = c.restaurant_id
-        GROUP BY DAY_OF_WEEK(b.battle_date), r.category
-        ORDER BY weekday, voteCount DESC
+            END          AS weekdayName,
+            t.category   AS category,
+            t.vote_count AS voteCount
+        FROM (
+            SELECT
+                DAY_OF_WEEK(b.battle_date) AS weekday,
+                r.category                 AS category,
+                COUNT(*)                   AS vote_count
+            FROM votes v
+            JOIN battles     b ON b.id = v.battle_id
+            JOIN candidates  c ON c.id = v.candidate_id
+            JOIN restaurants r ON r.id = c.restaurant_id
+            GROUP BY DAY_OF_WEEK(b.battle_date), r.category
+        ) t
+        ORDER BY t.weekday, t.vote_count DESC
     </select>
 
     <!-- 분석 4 — 개인 편식 지수 -->

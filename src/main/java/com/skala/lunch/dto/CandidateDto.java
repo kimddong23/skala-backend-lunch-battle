@@ -19,12 +19,12 @@ public class CandidateDto {
     /** 득표율 (%). */
     private Double sharePercent;
 
-    /** 최근에 우승해서 깎인 점수. 0이면 불이익 없음. */
-    private Integer repeatPenalty;
+    /**
+     * 지금 득표대로 경주에 나갈 때 받게 될 판단력 가산.
+     *
+     * 표가 결과에 어떻게 작용하는지 화면에서 바로 보이게 하려고 미리 계산해 둔다.
+     * 실제 값은 경주 시작 시점의 득표로 다시 계산된다.
+     */
+    private Double cheerBonus;
 
-    /** 감점을 반영한 최종 점수 — 순위는 이 값으로 매긴다. */
-    private Integer finalScore;
-
-    /** 감점 사유 안내. */
-    private String penaltyNote;
 }
