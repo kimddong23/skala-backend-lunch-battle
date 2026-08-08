@@ -22,20 +22,25 @@
   }
   .mono{font-family:D2Coding,"SF Mono",Menlo,monospace;font-variant-numeric:tabular-nums}
 
+  /* 부트스트랩 아이콘 */
+  .ic{width:1em;height:1em;fill:currentColor;vertical-align:-.125em;flex:none}
+  .ic.lg{width:1.15em;height:1.15em}
+
   /* ── 간판 ───────────────────────────────────────── */
   header{background:var(--ink);color:var(--sun);padding:22px 20px 20px;
          border-bottom:5px solid var(--ink)}
   .marquee{max-width:1080px;margin:0 auto;display:flex;align-items:center;
            gap:16px;flex-wrap:wrap}
-  .logo{font-size:30px;font-weight:900;letter-spacing:-1.2px;line-height:1.1;margin:0}
+  .logo{font-size:30px;font-weight:900;letter-spacing:-1.2px;line-height:1.1;margin:0;
+        display:flex;align-items:center;gap:10px}
   .logo em{font-style:normal;color:var(--paper)}
   .tag{font-size:13.5px;color:#c8bfa6;margin:0;flex:1 1 260px;min-width:0}
   .live{display:inline-flex;align-items:center;gap:7px;background:var(--flame);
         color:#fff;font-size:12px;font-weight:800;letter-spacing:.6px;
         padding:6px 12px;border-radius:999px;white-space:nowrap}
-  .live i{width:7px;height:7px;border-radius:50%;background:#fff;
-          animation:blink 1s steps(2,end) infinite}
-  @keyframes blink{50%{opacity:.15}}
+  .live .ic{animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  @media (prefers-reduced-motion:reduce){.live .ic{animation:none}}
 
   main{max-width:1080px;margin:0 auto;padding:26px 18px 72px}
 
@@ -45,14 +50,9 @@
   .card > h2{margin:0 0 3px;font-size:20px;font-weight:900;letter-spacing:-.5px;
              display:flex;align-items:center;gap:9px;flex-wrap:wrap}
   .card > .sub{margin:0 0 16px;font-size:13px;color:var(--dim)}
-  /* 색을 반드시 직접 지정한다. 어두운 패널 안에서 h2 의 노란 글자색을
-     물려받으면 노란 알약 위 노란 글씨가 되어 아무것도 안 보인다. */
   .chip{font-size:11.5px;font-weight:800;letter-spacing:.4px;padding:4px 10px;
         border-radius:999px;border:2px solid var(--ink);background:var(--sun);
         color:var(--ink);white-space:nowrap}
-  .chip.dark{background:var(--ink);color:var(--sun)}
-  .chip.mint{background:var(--mint);color:#fff}
-  .chip.flame{background:var(--flame);color:#fff}
 
   /* ── 컨트롤 ─────────────────────────────────────── */
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -63,21 +63,24 @@
          background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9'><path d='M1 1l6 6 6-6' fill='none' stroke='%2316130e' stroke-width='2.6' stroke-linecap='round'/></svg>");
          background-repeat:no-repeat;background-position:right 15px center;
          max-width:100%;text-overflow:ellipsis}
-  .btn{box-shadow:0 4px 0 var(--ink);transition:transform .08s,box-shadow .08s,filter .12s}
+  .btn{box-shadow:0 4px 0 var(--ink);transition:transform .08s,box-shadow .08s,filter .12s;
+       display:inline-flex;align-items:center;gap:7px;justify-content:center}
   .btn:hover:not(:disabled){filter:brightness(1.04);transform:translateY(-1px);box-shadow:0 5px 0 var(--ink)}
   .btn:active:not(:disabled){transform:translateY(4px);box-shadow:0 0 0 var(--ink)}
+  .btn:focus-visible{outline:3px solid var(--sky);outline-offset:3px}
   .btn:disabled{opacity:.38;cursor:not-allowed}
-  .btn.go{background:var(--flame);color:#fff;font-size:16px;padding:12px 24px}
+  .btn.go{background:var(--flame);color:#fff;font-size:16px;padding:12px 22px}
+  .btn.again{background:var(--sun);color:var(--ink)}
   .btn.sm{padding:8px 14px;font-size:13.5px;box-shadow:0 3px 0 var(--ink)}
   .btn.sm:active:not(:disabled){transform:translateY(3px)}
+  .btn[hidden]{display:none}
 
-  /* ── 알림줄 (자리를 차지해 본문을 가리지 않는다) ── */
+  /* ── 알림줄 ─────────────────────────────────────── */
   .notice{margin-top:14px;min-height:44px;display:flex;align-items:center;gap:9px;
           border:3px solid var(--ink);border-radius:14px;padding:9px 15px;
           font-size:14px;font-weight:700;background:#f3efe2}
   .notice.ok{background:var(--mint);color:#fff}
   .notice.err{background:var(--flame);color:#fff}
-  .notice .dot{width:9px;height:9px;border-radius:50%;background:currentColor;flex:none}
 
   /* ── 경기장 ─────────────────────────────────────── */
   .stage{background:var(--ink);border-color:var(--ink);padding:16px}
@@ -89,17 +92,20 @@
   .screen{background:var(--paper);border:3px solid var(--ink);border-radius:14px;
           overflow:hidden;line-height:0}
   canvas{display:block;width:100%;height:auto}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;
+          font-size:12px;color:#a99f88;font-weight:700;align-items:center}
+  .legend i{display:inline-block;width:20px;height:5px;border-radius:3px;
+            background:var(--sun);margin-right:5px;vertical-align:middle}
   .headline{margin:14px 0 0;background:var(--sun);border:3px solid var(--ink);
             border-radius:14px;padding:12px 16px;font-size:15.5px;font-weight:800;
             min-height:50px;display:flex;align-items:center;gap:10px}
   .seed{margin-top:9px;font-size:11.5px;color:#8d8471;word-break:break-all}
 
-  /* 시상대 */
   .podium{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
   .pod{flex:1 1 180px;min-width:0;background:var(--paper);border:3px solid var(--ink);
        border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:11px}
   .pod.first{background:var(--sun)}
-  .pod .mdl{font-size:26px;line-height:1}
+  .pod .mdl{font-size:21px;line-height:1;display:flex}
   .pod .who{min-width:0}
   .pod .who b{display:block;font-size:15px;font-weight:900;
               overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -107,7 +113,7 @@
 
   /* ── 출전 명단 ──────────────────────────────────── */
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:14px}
-  .cand{border:3px solid var(--ink);border-radius:16px;padding:0;overflow:hidden;
+  .cand{border:3px solid var(--ink);border-radius:16px;overflow:hidden;
         background:var(--paper);display:flex;flex-direction:column}
   .cand .hd{padding:12px 14px 10px;border-bottom:3px solid var(--ink)}
   .cand.lead .hd{background:var(--sun)}
@@ -123,8 +129,8 @@
        overflow:hidden}
   .bar > span{display:block;height:100%;background:var(--flame);transition:width .4s ease}
   .penalty{background:var(--flame);color:#fff;border-radius:9px;padding:6px 10px;
-           font-size:12px;font-weight:700}
-  .cand .btn{width:100%;justify-content:center;text-align:center;background:var(--mint);color:#fff}
+           font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+  .cand .btn{width:100%;background:var(--mint);color:#fff}
   .empty{grid-column:1/-1;text-align:center;color:var(--dim);font-size:14px;
          padding:26px 10px;border:3px dashed var(--line);border-radius:16px}
 
@@ -132,11 +138,9 @@
   .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
   .tabs .btn{background:var(--paper)}
   .tabs .btn.on{background:var(--ink);color:var(--sun)}
-  /* 배경을 반드시 깐다. 표는 어두운 경기장 패널 안에도 들어가는데,
-     줄무늬가 없는 홀수행은 배경이 비쳐 검은 바탕에 검은 글씨가 된다. */
   .twrap{overflow-x:auto;border:3px solid var(--ink);border-radius:14px;
          background:var(--paper);margin-top:14px}
-  table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:460px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:520px}
   th,td{padding:10px 12px;text-align:left;border-bottom:2px solid var(--line);
         white-space:nowrap}
   th{background:var(--ink);color:var(--sun);font-size:12px;font-weight:800;
@@ -145,9 +149,8 @@
   tbody tr:last-child td{border-bottom:none}
   td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
   tr.win{background:var(--sun)!important;font-weight:800}
-  /* 스카우팅 한줄평은 줄바꿈을 허용하되 칸을 충분히 준다.
-     좁은 화면에서 폭이 눌리면 두세 글자씩 끊겨 읽을 수 없게 된다. */
-  td.note{white-space:normal;min-width:190px;color:var(--dim);font-size:12.5px}
+  td.note{white-space:normal;min-width:200px;color:var(--dim);font-size:12.5px}
+  td.mdl .ic{font-size:17px}
 
   @media (max-width:560px){
     .logo{font-size:23px}
@@ -157,13 +160,15 @@
 </style>
 </head>
 <body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="bi-signpost-split-fill" viewBox="0 0 16 16"><path d="M7 16h2V6h5a1 1 0 0 0 .8-.4l.975-1.3a.5.5 0 0 0 0-.6L14.8 2.4A1 1 0 0 0 14 2H9v-.586a1 1 0 0 0-2 0V7H2a1 1 0 0 0-.8.4L.225 8.7a.5.5 0 0 0 0 .6l.975 1.3a1 1 0 0 0 .8.4h5z"/></symbol><symbol id="bi-egg-fried" viewBox="0 0 16 16"><path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/> <path d="M13.997 5.17a5 5 0 0 0-8.101-4.09A5 5 0 0 0 1.28 9.342a5 5 0 0 0 8.336 5.109 3.5 3.5 0 0 0 5.201-4.065 3.001 3.001 0 0 0-.822-5.216zm-1-.034a1 1 0 0 0 .668.977 2.001 2.001 0 0 1 .547 3.478 1 1 0 0 0-.341 1.113 2.5 2.5 0 0 1-3.715 2.905 1 1 0 0 0-1.262.152 4 4 0 0 1-6.67-4.087 1 1 0 0 0-.2-1 4 4 0 0 1 3.693-6.61 1 1 0 0 0 .8-.2 4 4 0 0 1 6.48 3.273z"/></symbol><symbol id="bi-bar-chart-fill" viewBox="0 0 16 16"><path d="M1 11a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1zm5-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1zm5-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1z"/></symbol><symbol id="bi-plus-lg" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/></symbol><symbol id="bi-megaphone-fill" viewBox="0 0 16 16"><path d="M13 2.5a1.5 1.5 0 0 1 3 0v11a1.5 1.5 0 0 1-3 0zm-1 .724c-2.067.95-4.539 1.481-7 1.656v6.237a25 25 0 0 1 1.088.085c2.053.204 4.038.668 5.912 1.56zm-8 7.841V4.934c-.68.027-1.399.043-2.008.053A2.02 2.02 0 0 0 0 7v2c0 1.106.896 1.996 1.994 2.009l.496.008a64 64 0 0 1 1.51.048m1.39 1.081q.428.032.85.078l.253 1.69a1 1 0 0 1-.983 1.187h-.548a1 1 0 0 1-.916-.599l-1.314-2.48a66 66 0 0 1 1.692.064q.491.026.966.06"/></symbol><symbol id="bi-arrow-clockwise" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/> <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></symbol><symbol id="bi-flag-fill" viewBox="0 0 16 16"><path d="M14.778.085A.5.5 0 0 1 15 .5V8a.5.5 0 0 1-.314.464L14.5 8l.186.464-.003.001-.006.003-.023.009a12 12 0 0 1-.397.15c-.264.095-.631.223-1.047.35-.816.252-1.879.523-2.71.523-.847 0-1.548-.28-2.158-.525l-.028-.01C7.68 8.71 7.14 8.5 6.5 8.5c-.7 0-1.638.23-2.437.477A20 20 0 0 0 3 9.342V15.5a.5.5 0 0 1-1 0V.5a.5.5 0 0 1 1 0v.282c.226-.079.496-.17.79-.26C4.606.272 5.67 0 6.5 0c.84 0 1.524.277 2.121.519l.043.018C9.286.788 9.828 1 10.5 1c.7 0 1.638-.23 2.437-.477a20 20 0 0 0 1.349-.476l.019-.007.004-.002h.001"/></symbol><symbol id="bi-trophy-fill" viewBox="0 0 16 16"><path d="M2.5.5A.5.5 0 0 1 3 0h10a.5.5 0 0 1 .5.5q0 .807-.034 1.536a3 3 0 1 1-1.133 5.89c-.79 1.865-1.878 2.777-2.833 3.011v2.173l1.425.356c.194.048.377.135.537.255L13.3 15.1a.5.5 0 0 1-.3.9H3a.5.5 0 0 1-.3-.9l1.838-1.379c.16-.12.343-.207.537-.255L6.5 13.11v-2.173c-.955-.234-2.043-1.146-2.833-3.012a3 3 0 1 1-1.132-5.89A33 33 0 0 1 2.5.5m.099 2.54a2 2 0 0 0 .72 3.935c-.333-1.05-.588-2.346-.72-3.935m10.083 3.935a2 2 0 0 0 .72-3.935c-.133 1.59-.388 2.885-.72 3.935"/></symbol><symbol id="bi-award-fill" viewBox="0 0 16 16"><path d="m8 0 1.669.864 1.858.282.842 1.68 1.337 1.32L13.4 6l.306 1.854-1.337 1.32-.842 1.68-1.858.282L8 12l-1.669-.864-1.858-.282-.842-1.68-1.337-1.32L2.6 6l-.306-1.854 1.337-1.32.842-1.68L6.331.864z"/> <path d="M4 11.794V16l4-1 4 1v-4.206l-2.018.306L8 13.126 6.018 12.1z"/></symbol><symbol id="bi-play-fill" viewBox="0 0 16 16"><path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393"/></symbol><symbol id="bi-speedometer2" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5V6a.5.5 0 0 1-1 0V4.5A.5.5 0 0 1 8 4M3.732 5.732a.5.5 0 0 1 .707 0l.915.914a.5.5 0 1 1-.708.708l-.914-.915a.5.5 0 0 1 0-.707M2 10a.5.5 0 0 1 .5-.5h1.586a.5.5 0 0 1 0 1H2.5A.5.5 0 0 1 2 10m9.5 0a.5.5 0 0 1 .5-.5h1.5a.5.5 0 0 1 0 1H12a.5.5 0 0 1-.5-.5m.754-4.246a.39.39 0 0 0-.527-.02L7.547 9.31a.91.91 0 1 0 1.302 1.258l3.434-4.297a.39.39 0 0 0-.029-.518z"/> <path fill-rule="evenodd" d="M0 10a8 8 0 1 1 15.547 2.661c-.442 1.253-1.845 1.602-2.932 1.25C11.309 13.488 9.475 13 8 13c-1.474 0-3.31.488-4.615.911-1.087.352-2.49.003-2.932-1.25A8 8 0 0 1 0 10m8-7a7 7 0 0 0-6.603 9.329c.203.575.923.876 1.68.63C4.397 12.533 6.358 12 8 12s3.604.532 4.923.96c.757.245 1.477-.056 1.68-.631A7 7 0 0 0 8 3"/></symbol><symbol id="bi-dice-5-fill" viewBox="0 0 16 16"><path d="M3 0a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V3a3 3 0 0 0-3-3zm2.5 4a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m8 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0M12 13.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3M5.5 12a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0M8 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/></symbol><symbol id="bi-broadcast" viewBox="0 0 16 16"><path d="M3.05 3.05a7 7 0 0 0 0 9.9.5.5 0 0 1-.707.707 8 8 0 0 1 0-11.314.5.5 0 0 1 .707.707m2.122 2.122a4 4 0 0 0 0 5.656.5.5 0 1 1-.708.708 5 5 0 0 1 0-7.072.5.5 0 0 1 .708.708m5.656-.708a.5.5 0 0 1 .708 0 5 5 0 0 1 0 7.072.5.5 0 1 1-.708-.708 4 4 0 0 0 0-5.656.5.5 0 0 1 0-.708m2.122-2.12a.5.5 0 0 1 .707 0 8 8 0 0 1 0 11.313.5.5 0 0 1-.707-.707 7 7 0 0 0 0-9.9.5.5 0 0 1 0-.707zM10 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0"/></symbol><symbol id="bi-compass-fill" viewBox="0 0 16 16"><path d="M15.5 8.516a7.5 7.5 0 1 1-9.462-7.24A1 1 0 0 1 7 0h2a1 1 0 0 1 .962 1.276 7.5 7.5 0 0 1 5.538 7.24m-3.61-3.905L6.94 7.439 4.11 12.39l4.95-2.828 2.828-4.95z"/></symbol><symbol id="bi-hourglass-split" viewBox="0 0 16 16"><path d="M2.5 15a.5.5 0 1 1 0-1h1v-1a4.5 4.5 0 0 1 2.557-4.06c.29-.139.443-.377.443-.59v-.7c0-.213-.154-.451-.443-.59A4.5 4.5 0 0 1 3.5 3V2h-1a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-1v1a4.5 4.5 0 0 1-2.557 4.06c-.29.139-.443.377-.443.59v.7c0 .213.154.451.443.59A4.5 4.5 0 0 1 12.5 13v1h1a.5.5 0 0 1 0 1zm2-13v1c0 .537.12 1.045.337 1.5h6.326c.216-.455.337-.963.337-1.5V2zm3 6.35c0 .701-.478 1.236-1.011 1.492A3.5 3.5 0 0 0 4.5 13s.866-1.299 3-1.48zm1 0v3.17c2.134.181 3 1.48 3 1.48a3.5 3.5 0 0 0-1.989-3.158C8.978 9.586 8.5 9.052 8.5 8.351z"/></symbol><symbol id="bi-exclamation-triangle-fill" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/></symbol><symbol id="bi-check-circle-fill" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></symbol><symbol id="bi-info-circle-fill" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/></symbol></svg>
 
 <header>
   <div class="marquee">
-    <h1 class="logo">🐹 런치 배틀 <em>LUNCH BATTLE</em></h1>
-    <p class="tag">메뉴마다 햄스터 한 마리. 먼저 결승선을 넘는 메뉴가 오늘의 점심.<br>
-       스탯은 출발 직전에 뽑히므로 만든 사람도 결과를 모른다.</p>
-    <span class="live"><i></i>ON AIR</span>
+    <h1 class="logo"><svg class="ic"><use href="#bi-dice-5-fill"/></svg>
+      런치 배틀 <em>LUNCH BATTLE</em></h1>
+    <p class="tag">메뉴마다 햄스터 한 마리가 같은 미로에 들어갑니다. 출구를 먼저 찾은 메뉴가 오늘의 점심.<br>
+       최단 경로는 서버가 BFS 로 구해 두고, 햄스터는 판단력만큼만 그 길을 따라갑니다.</p>
+    <span class="live"><svg class="ic"><use href="#bi-broadcast"/></svg>ON AIR</span>
   </div>
 </header>
 
@@ -171,17 +176,29 @@
 
   <!-- 경기장 -->
   <section class="card stage" id="raceWrap">
-    <h2>🏁 트랙 <span class="chip" id="stageChip">출발 대기</span></h2>
-    <p class="sub">서버가 계산한 매 순간의 위치를 그대로 재생합니다 · 화면은 결과를 바꾸지 않습니다</p>
+    <h2><svg class="ic lg"><use href="#bi-signpost-split-fill"/></svg>
+      미로 <span class="chip" id="stageChip">출발 대기</span></h2>
+    <p class="sub">서버가 만든 미로와 매 걸음의 위치를 그대로 재생합니다 · 화면은 결과를 바꾸지 않습니다</p>
 
     <div class="hud">
       <span id="battleInfo">불러오는 중…</span>
       <span class="spacer"></span>
-      <button class="btn sm" id="speedBtn">재생속도 ×1</button>
-      <button class="btn go" id="raceBtn">레이스 시작</button>
+      <button class="btn sm" id="speedBtn">
+        <svg class="ic"><use href="#bi-speedometer2"/></svg><span id="speedLabel">보통</span></button>
+      <button class="btn go" id="raceBtn">
+        <svg class="ic"><use href="#bi-play-fill"/></svg>경주 시작</button>
+      <button class="btn again" id="againBtn" hidden>
+        <svg class="ic"><use href="#bi-arrow-clockwise"/></svg>다시 하기</button>
     </div>
 
-    <div class="screen"><canvas id="raceCanvas" width="1120" height="420"></canvas></div>
+    <div class="screen"><canvas id="raceCanvas" width="880" height="520"></canvas></div>
+
+    <div class="legend">
+      <span><i></i>최단 경로 (BFS)</span>
+      <span><svg class="ic"><use href="#bi-compass-fill"/></svg> 출발</span>
+      <span><svg class="ic"><use href="#bi-flag-fill"/></svg> 출구</span>
+      <span id="optInfo"></span>
+    </div>
 
     <div class="headline" id="headline">후보를 2개 이상 올리면 출발선에 섭니다</div>
     <div class="seed mono" id="seed"></div>
@@ -191,22 +208,24 @@
 
   <!-- 출전 명단 -->
   <section class="card">
-    <h2>🍚 출전 명단 <span class="chip" id="voteChip">응원 0표</span></h2>
+    <h2><svg class="ic lg"><use href="#bi-egg-fried"/></svg>
+      출전 명단 <span class="chip" id="voteChip">응원 0표</span></h2>
     <p class="sub" id="comment">—</p>
 
     <div class="row">
       <select id="voterSel" aria-label="사원 선택"></select>
       <select id="restSel" aria-label="식당 선택"></select>
-      <button class="btn" id="addBtn">＋ 출전 등록</button>
+      <button class="btn" id="addBtn"><svg class="ic"><use href="#bi-plus-lg"/></svg>출전 등록</button>
     </div>
-    <div class="notice" id="notice"><span class="dot"></span><span id="noticeText">준비되었습니다</span></div>
+    <div class="notice" id="notice">
+      <svg class="ic"><use href="#bi-info-circle-fill"/></svg><span id="noticeText">준비되었습니다</span></div>
 
     <div class="grid" id="cands" style="margin-top:16px"></div>
   </section>
 
   <!-- 기록실 -->
   <section class="card">
-    <h2>📊 전적 기록실</h2>
+    <h2><svg class="ic lg"><use href="#bi-bar-chart-fill"/></svg> 전적 기록실</h2>
     <p class="sub">집계 조회는 SQL Mapper(MyBatis) 로 처리합니다</p>
     <div class="tabs" id="tabs"></div>
     <div id="analysis"></div>
@@ -216,6 +235,7 @@
 
 <script>
 const $ = s => document.querySelector(s);
+const BI_PATH = {"flag-fill": "M14.778.085A.5.5 0 0 1 15 .5V8a.5.5 0 0 1-.314.464L14.5 8l.186.464-.003.001-.006.003-.023.009a12 12 0 0 1-.397.15c-.264.095-.631.223-1.047.35-.816.252-1.879.523-2.71.523-.847 0-1.548-.28-2.158-.525l-.028-.01C7.68 8.71 7.14 8.5 6.5 8.5c-.7 0-1.638.23-2.437.477A20 20 0 0 0 3 9.342V15.5a.5.5 0 0 1-1 0V.5a.5.5 0 0 1 1 0v.282c.226-.079.496-.17.79-.26C4.606.272 5.67 0 6.5 0c.84 0 1.524.277 2.121.519l.043.018C9.286.788 9.828 1 10.5 1c.7 0 1.638-.23 2.437-.477a20 20 0 0 0 1.349-.476l.019-.007.004-.002h.001", "trophy-fill": "M2.5.5A.5.5 0 0 1 3 0h10a.5.5 0 0 1 .5.5q0 .807-.034 1.536a3 3 0 1 1-1.133 5.89c-.79 1.865-1.878 2.777-2.833 3.011v2.173l1.425.356c.194.048.377.135.537.255L13.3 15.1a.5.5 0 0 1-.3.9H3a.5.5 0 0 1-.3-.9l1.838-1.379c.16-.12.343-.207.537-.255L6.5 13.11v-2.173c-.955-.234-2.043-1.146-2.833-3.012a3 3 0 1 1-1.132-5.89A33 33 0 0 1 2.5.5m.099 2.54a2 2 0 0 0 .72 3.935c-.333-1.05-.588-2.346-.72-3.935m10.083 3.935a2 2 0 0 0 .72-3.935c-.133 1.59-.388 2.885-.72 3.935", "compass-fill": "M15.5 8.516a7.5 7.5 0 1 1-9.462-7.24A1 1 0 0 1 7 0h2a1 1 0 0 1 .962 1.276 7.5 7.5 0 0 1 5.538 7.24m-3.61-3.905L6.94 7.439 4.11 12.39l4.95-2.828 2.828-4.95z"};
 
 /**
  * HTML 이스케이프.
@@ -227,8 +247,11 @@ const $ = s => document.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g,
   ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 
+const icon = (name, cls) => `<svg class="ic${cls ? ' ' + cls : ''}"><use href="#bi-${name}"/></svg>`;
+
 /** 감점 안내 조각. 출력 지점을 한곳에 모아 이스케이프 누락을 눈에 띄게 한다. */
-const penaltyHtml = note => note ? `<div class="penalty">${esc(note)}</div>` : '';
+const penaltyHtml = note => note
+  ? `<div class="penalty">${icon('exclamation-triangle-fill')}<span>${esc(note)}</span></div>` : '';
 
 let battle = null, members = [], restaurants = [];
 
@@ -238,6 +261,9 @@ function notice(msg, kind){
   $('#noticeText').textContent = msg;
   box.classList.remove('ok', 'err');
   if (kind) box.classList.add(kind);
+  box.querySelector('use').setAttribute('href',
+    kind === 'ok' ? '#bi-check-circle-fill'
+    : kind === 'err' ? '#bi-exclamation-triangle-fill' : '#bi-info-circle-fill');
 }
 
 async function api(path, opts){
@@ -278,6 +304,7 @@ async function loadBattle(){
 function render(){
   const closed = battle.status === 'CLOSED';
   const cands = battle.candidates || [];
+  const racing = raceState === 'run' || raceState === 'count';
 
   $('#battleInfo').textContent =
     `${battle.battleDate} · ${closed ? '마감' : '응원 접수 중'} · 출전 ${cands.length}팀`
@@ -285,31 +312,37 @@ function render(){
   $('#voteChip').textContent = `응원 ${battle.totalVotes}표`;
   $('#comment').textContent = battle.comment || '—';
   $('#addBtn').disabled = closed;
-  $('#raceBtn').disabled = closed || cands.length < 2 || raceState === 'run';
+  $('#raceBtn').disabled = closed || cands.length < 2 || racing;
+  $('#againBtn').hidden = !(raceState === 'done' || (closed && !racing));
   $('#stageChip').textContent =
-    raceState === 'run' ? '경기 중' : closed ? '경기 종료' : cands.length < 2 ? '출발 대기' : '출발 준비 완료';
+    racing ? '경기 중' : closed ? '경기 종료' : cands.length < 2 ? '출발 대기' : '출발 준비 완료';
 
   // 아직 달리기 전이면 안내를 지금 상황에 맞춰 둔다.
   // 경기 중·종료 상태의 중계 멘트를 덮어쓰지 않도록 gate 일 때만 손댄다.
   if (raceState === 'gate'){
-    $('#headline').textContent = closed
-      ? (battle.winnerName ? `오늘 점심은 ${battle.winnerName} 입니다` : '오늘 배틀은 마감되었습니다')
-      : cands.length < 2
-        ? '후보를 2개 이상 올리면 출발선에 섭니다'
-        : `${cands.length}팀이 출발선에 섰습니다. 준비되면 레이스를 시작하세요`;
+    $('#headline').textContent = cands.length < 2
+      ? '후보를 2개 이상 올리면 출발선에 섭니다'
+      : `${cands.length}팀이 출발선에 섰습니다. 경주를 시작하면 미로가 만들어집니다`;
   }
 
   if (!cands.length){
     $('#cands').innerHTML = '<p class="empty">아직 출전한 메뉴가 없습니다.<br>위에서 식당을 골라 등록해 주세요.</p>';
   } else {
     const max = Math.max(1, ...cands.map(c => c.voteCount));
+    // 경기가 끝났으면 표를 제일 많이 받은 쪽이 아니라 실제로 이긴 쪽을 표시한다.
+    // 미로에서 뒤집히는 것이 이 경기의 재미인데, 끝난 뒤에도 득표 1위에
+    // 트로피가 붙어 있으면 누가 이겼는지 반대로 읽힌다.
+    const crown = c => battle.winnerName
+      ? c.restaurantName === battle.winnerName
+      : cands.indexOf(c) === 0;
+
     $('#cands').innerHTML = cands.map((c, i) => `
-      <div class="cand ${i === 0 ? 'lead' : ''}">
+      <div class="cand ${crown(c) ? 'lead' : ''}">
         <div class="hd">
           <div class="nm">
             <span style="width:14px;height:14px;border-radius:50%;flex:none;
                          border:2px solid var(--ink);background:${LANE_COLORS[i % LANE_COLORS.length]}"></span>
-            <b>${esc(c.restaurantName)}</b>${i === 0 ? ' 👑' : ''}
+            <b>${esc(c.restaurantName)}</b>${crown(c) ? icon('trophy-fill') : ''}
           </div>
           <div class="meta">${esc(c.category)} · 도보 ${c.walkMinutes}분 · ${c.price.toLocaleString()}원 · ${esc(c.addedByName)} 추천</div>
         </div>
@@ -318,7 +351,7 @@ function render(){
           <div class="bar"><span style="width:${(c.voteCount / max * 100).toFixed(0)}%;
                background:${LANE_COLORS[i % LANE_COLORS.length]}"></span></div>
           ${penaltyHtml(c.penaltyNote)}
-          ${closed ? '' : `<button class="btn sm" data-vote="${c.id}">📣 이 메뉴 응원</button>`}
+          ${closed ? '' : `<button class="btn sm" data-vote="${c.id}">${icon('megaphone-fill')}이 메뉴 응원</button>`}
         </div>
       </div>`).join('');
 
@@ -326,7 +359,7 @@ function render(){
       b.onclick = () => vote(Number(b.dataset.vote)));
   }
 
-  if (raceState === 'gate') drawScene();
+  if (raceState === 'gate') drawScene(0);
 }
 
 async function vote(candidateId){
@@ -335,7 +368,7 @@ async function vote(candidateId){
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({memberId: Number($('#voterSel').value), candidateId})
     });
-    render(); notice('응원했습니다. 응원은 약간의 가산일 뿐입니다', 'ok');
+    render(); notice('응원했습니다. 응원은 판단력을 올려 줍니다', 'ok');
   } catch(e){ notice(e.message, 'err'); }
 }
 
@@ -347,31 +380,25 @@ $('#addBtn').onclick = async () => {
   } catch(e){ notice(e.message, 'err'); }
 };
 
-// ═══ 햄스터 레이스 ══════════════════════════════════════════
+// ═══ 햄스터 미로 경주 ═══════════════════════════════════════
 const LANE_COLORS = ['#f2542d','#4c8dff','#12b886','#8b5cf6','#ff8fab','#ffb300','#0ea5e9','#84cc16'];
 const INK = '#16130e';
 
 const cv = $('#raceCanvas'), ctx = cv.getContext('2d');
 
-/**
- * 트랙 치수.
- *
- * 캔버스는 CSS 로 폭에 맞춰 줄어든다. 넓은 화면 기준 치수를 그대로 쓰면
- * 휴대폰에서 전체가 균일하게 축소돼 이름도 햄스터도 알아볼 수 없게 된다.
- * 좁은 화면에서는 논리 폭 자체를 줄여 요소가 상대적으로 커지게 한다.
- */
-function geo(){
-  const narrow = (cv.clientWidth || 900) < 560;
-  return narrow
-    ? {W: 640,  label: 132, padR: 56, laneH: 72, headH: 40,
-       scale: 1.15, gauge: 92,  nameSize: 15, subSize: 11, nameMax: 74, badge: 12}
-    : {W: 1120, label: 244, padR: 92, laneH: 92, headH: 46,
-       scale: 1.45, gauge: 150, nameSize: 19, subSize: 13, nameMax: 168, badge: 15};
-}
-
 let raceData = null;          // 서버가 내려준 경기 기록
 let raceState = 'gate';       // gate · count · run · done
-let frame = 0, anim = 0, rafId = null, speedMul = 1, confetti = [];
+let step = 0;                 // 진행한 걸음 (소수 = 칸 사이 보간)
+let anim = 0, rafId = null, confetti = [];
+
+/** 재생 속도. 한 걸음이 곧 한 칸이라 초당 걸음 수로 정한다. */
+const SPEEDS = [
+  {label:'느리게', mps: 5},
+  {label:'보통',   mps: 9},
+  {label:'빠르게', mps: 18},
+  {label:'아주 빠르게', mps: 34}
+];
+let speedIdx = 1;
 
 function shade(hex, amt){
   const n = parseInt(hex.slice(1), 16);
@@ -379,11 +406,23 @@ function shade(hex, amt){
   return `rgb(${f(n >> 16 & 255)},${f(n >> 8 & 255)},${f(n & 255)})`;
 }
 
+/** 부트스트랩 아이콘을 캔버스에 그린다 (16x16 기준을 size 로 맞춘다). */
+function drawIcon(name, x, y, size, color){
+  const d = BI_PATH[name];
+  if (!d) return;
+  ctx.save();
+  ctx.translate(x - size / 2, y - size / 2);
+  ctx.scale(size / 16, size / 16);
+  ctx.fillStyle = color;
+  ctx.fill(new Path2D(d));
+  ctx.restore();
+}
+
 /**
  * 햄스터 한 마리. (x, y) 는 발이 닿는 지점.
  * mode: run 달리는 중 · idle 대기 · cheer 만세
  */
-function hamster(x, y, s, col, t, mode){
+function hamster(x, y, s, col, t, mode, faceLeft){
   const run = mode === 'run', cheer = mode === 'cheer';
   const gait = t * 0.55;
   const bob = run ? Math.abs(Math.sin(gait)) * 3.4
@@ -393,7 +432,7 @@ function hamster(x, y, s, col, t, mode){
   const dark = shade(col, -34), light = shade(col, 36);
 
   ctx.save();
-  ctx.translate(x, y); ctx.scale(s, s);
+  ctx.translate(x, y); ctx.scale(faceLeft ? -s : s, s);
   ctx.lineJoin = ctx.lineCap = 'round';
 
   // 땅그림자 — 몸이 뜰수록 작아진다
@@ -486,202 +525,187 @@ function roundRect(x, y, w, h, r){
   ctx.closePath();
 }
 
-/** 화면에 세울 참가자 목록. 레이스 전에는 후보 목록으로 출발선을 채운다. */
+// ── 미로 치수 ────────────────────────────────────
+function geo(){
+  const cols = raceData ? raceData.cols : 21;
+  const rows = raceData ? raceData.rows : 11;
+  const avail = Math.max(320, cv.clientWidth || 880);
+  // 칸 크기를 화면 폭에 맞춘다. 좁은 화면에서 통째로 축소되면 아무것도 안 보인다.
+  const cell = Math.max(16, Math.min(40, Math.floor((avail - 34) / cols)));
+  const pad = Math.round(cell * 0.55);
+  const head = 40;
+  return {cols, rows, cell, pad, head,
+          W: cols * cell + pad * 2,
+          H: rows * cell + pad * 2 + head};
+}
+
+const cellX = (c, g) => g.pad + (c % g.cols) * g.cell + g.cell / 2;
+const cellY = (c, g) => g.head + g.pad + Math.floor(c / g.cols) * g.cell + g.cell / 2;
+
+/** 지금 그려야 할 참가자 목록. */
 function sceneLanes(){
   if (raceData){
     return [...raceData.lanes].sort((a, b) => a.candidateId - b.candidateId)
-      .map(l => ({name:l.restaurantName, votes:l.voteCount, track:l.track,
+      .map(l => ({name:l.restaurantName, votes:l.voteCount, path:l.path,
                   finishTick:l.finishTick, rank:l.rank}));
   }
   return (battle?.candidates || [])
-    .map(c => ({name:c.restaurantName, votes:c.voteCount, track:null,
+    .map(c => ({name:c.restaurantName, votes:c.voteCount, path:null,
                 finishTick:null, rank:null}));
 }
 
-function drawScene(){
-  const lanes = sceneLanes();
+function drawScene(dt){
   const g = geo();
-  // 폭·높이 대입은 캔버스 버퍼를 통째로 다시 만든다. 값이 바뀔 때만 손댄다.
   if (cv.width !== g.W) cv.width = g.W;
-  const W = cv.width;
-  const wanted = g.headH + Math.max(1, lanes.length) * g.laneH + 18;
-  if (cv.height !== wanted) cv.height = wanted;
-  const H = cv.height;
-  const startX = g.label, endX = W - g.padR;
+  if (cv.height !== g.H) cv.height = g.H;
 
-  ctx.fillStyle = '#fffdf5'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#fffdf5'; ctx.fillRect(0, 0, g.W, g.H);
+  const lanes = sceneLanes();
 
-  if (!lanes.length){
-    ctx.fillStyle = '#b3a98f';
-    ctx.font = '800 21px "Apple SD Gothic Neo",sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('출전한 메뉴가 없습니다', W / 2, H / 2);
-    return;
-  }
-
-  const total = raceData ? raceData.totalTicks : 1;
-  const trackLen = raceData ? raceData.trackLength : 1000;
-
-  // 순위표(현재 위치 기준) — 라벨의 순위 배지에 쓴다
-  const posOf = l => l.track ? (l.track[Math.min(frame, l.track.length - 1)] || 0) : 0;
-  const order = [...lanes].sort((a, b) => posOf(b) - posOf(a));
-
-  // ── 머리말: 진행 게이지
-  ctx.fillStyle = INK;
-  ctx.font = `800 ${g.nameSize - 4}px "Apple SD Gothic Neo",sans-serif`;
-  ctx.textAlign = 'left';
-  ctx.fillText(raceState === 'run' || raceState === 'done'
-      ? `${Math.min(frame, total)} / ${total} TICK` : 'READY', 14, 27);
-
-  const gx = g.gauge, gw = endX - gx;
-  roundRect(gx, 15, gw, 15, 8); ctx.fillStyle = '#efe9d8'; ctx.fill();
-  ctx.strokeStyle = INK; ctx.lineWidth = 2.4; ctx.stroke();
-  if (raceState === 'run' || raceState === 'done'){
-    ctx.save(); roundRect(gx, 15, gw, 15, 8); ctx.clip();
-    ctx.fillStyle = '#f2542d';
-    ctx.fillRect(gx, 15, gw * Math.min(1, frame / total), 15);
-    ctx.restore();
-  }
-
-  // ── 결승 기둥 (체커) : 세로 전체
-  const colW = g.padR < 70 ? 10 : 15;
-  for (let y = g.headH - 8; y < H; y += 16){
-    const alt = Math.floor((y - g.headH) / 16) % 2 === 0;
-    ctx.fillStyle = alt ? INK : '#fff';
-    ctx.fillRect(endX + 8, y, colW, 16);
-    ctx.fillStyle = alt ? '#fff' : INK;
-    ctx.fillRect(endX + 8 + colW, y, colW, 16);
-  }
-  ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
-  ctx.strokeRect(endX + 8, g.headH - 8, colW * 2, H - g.headH + 8);
-  ctx.save();
-  ctx.translate(endX + colW * 2 + 26, g.headH + 40); ctx.rotate(Math.PI / 2);
-  ctx.fillStyle = INK; ctx.font = `900 ${g.nameSize - 2}px sans-serif`; ctx.textAlign = 'left';
-  ctx.fillText('FINISH', 0, 0);
-  ctx.restore();
-
-  // ── 레인
-  lanes.forEach((lane, i) => {
-    const top = g.headH + i * g.laneH;
-    const ground = top + g.laneH - 22;
-    const color = LANE_COLORS[i % LANE_COLORS.length];
-    const pos = posOf(lane);
-    // 결승선에 닿는 것은 몸통 중심이 아니라 코끝이다. 머리 길이를 빼지 않으면
-    // 완주한 햄스터가 체커 기둥 위로 올라타 그림이 겹쳐 보인다.
-    const nose = 18 * g.scale;
-    const x = startX + (endX - nose - startX) * (pos / trackLen);
-    const done = lane.finishTick != null && frame >= lane.finishTick;
-    const leading = order[0] === lane && raceState !== 'gate';
-
-    // 레인 바닥
-    roundRect(startX - 14, top + 5, endX - startX + 30, g.laneH - 12, 12);
-    ctx.fillStyle = leading ? '#fff6d6' : (i % 2 ? '#f7f3e4' : '#fffdf5');
-    ctx.fill();
-    ctx.strokeStyle = leading ? '#f2542d' : '#e6e0cf';
-    ctx.lineWidth = leading ? 3 : 2; ctx.stroke();
-
-    // 거리 눈금
-    ctx.strokeStyle = '#e0d9c4'; ctx.lineWidth = 2; ctx.setLineDash([5, 7]);
-    for (let q = 1; q <= 3; q++){
-      const qx = startX + (endX - startX) * q / 4;
-      ctx.beginPath(); ctx.moveTo(qx, top + 12); ctx.lineTo(qx, top + g.laneH - 15); ctx.stroke();
-    }
-    ctx.setLineDash([]);
-
-    // 땅바닥 + 지나온 자취
-    ctx.strokeStyle = '#ded6c0'; ctx.lineWidth = 4; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(startX, ground + 3); ctx.lineTo(endX, ground + 3); ctx.stroke();
-    ctx.strokeStyle = color; ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.moveTo(startX, ground + 3); ctx.lineTo(Math.max(startX, x), ground + 3); ctx.stroke();
-
-    // 출발 게이트
-    ctx.fillStyle = '#cfc6ad';
-    ctx.fillRect(startX - 8, top + 14, 5, g.laneH - 38);
-
-    // ── 라벨
-    const bx = g.badge + 8;
-    const badge = raceState === 'gate' ? i + 1 : (order.indexOf(lane) + 1);
-    ctx.beginPath(); ctx.arc(bx, ground - 12, g.badge, 0, 6.284);
-    ctx.fillStyle = badge === 1 && raceState !== 'gate' ? '#ffd21e' : '#efe9d8';
-    ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 2.5; ctx.stroke();
-    ctx.fillStyle = INK; ctx.font = `900 ${g.nameSize - 4}px sans-serif`; ctx.textAlign = 'center';
-    ctx.fillText(badge, bx, ground - 12 + (g.nameSize - 4) * 0.36);
-
-    const nx = bx + g.badge + 9;
-    ctx.textAlign = 'left';
-    ctx.fillStyle = INK; ctx.font = `900 ${g.nameSize}px "Apple SD Gothic Neo",sans-serif`;
-    ctx.fillText(clip(lane.name, g.nameMax), nx, ground - 14);
-    ctx.fillStyle = '#8d8471'; ctx.font = `700 ${g.subSize}px "Apple SD Gothic Neo",sans-serif`;
-    ctx.fillText(`응원 ${lane.votes}표`, nx, ground + 3);
-
-    // 레인 색 표식
-    ctx.beginPath(); ctx.arc(startX - 24, ground - 10, 6.5, 0, 6.284);
-    ctx.fillStyle = color; ctx.fill();
-    ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.stroke();
-
-    // ── 먼지 (달리는 중에만)
-    if (raceState === 'run' && !done && pos > 0){
-      ctx.fillStyle = 'rgba(190,178,150,.55)';
-      for (let d = 1; d <= 3; d++){
-        const dx = x - (18 + d * 8) * g.scale - (anim % 8);
-        if (dx > startX - 6){
-          ctx.beginPath();
-          ctx.arc(dx, ground - 3 + Math.sin(anim * .3 + d) * 2, (4 - d * 0.8) * g.scale, 0, 6.284);
-          ctx.fill();
-        }
-      }
-    }
-
-    const mode = done ? 'cheer' : (raceState === 'run' ? 'run' : 'idle');
-    hamster(x, ground, g.scale, color, anim + i * 17, mode);
-
-    // 완주 표시는 햄스터 왼쪽에 둔다. 오른쪽에 두면 결승 기둥과 겹친다.
-    ctx.fillStyle = INK; ctx.textAlign = 'center';
-    if (done){
-      ctx.font = `${Math.round(14 * g.scale)}px sans-serif`;
-      ctx.fillText('🏁', x - 28 * g.scale, ground - 18 * g.scale);
-    }
-    if (leading && raceState === 'run' && !done){
-      ctx.font = `${Math.round(13 * g.scale)}px sans-serif`;
-      ctx.fillText('👑', x + 2, ground - 42 * g.scale);
-    }
-  });
-
-  drawConfetti();
-  if (raceState === 'count') drawCountdown();
+  if (!raceData){ drawGate(lanes, g); return; }
+  drawMaze(g);
+  drawRunners(lanes, g);
+  drawHud(g);
+  drawConfetti(dt);
 }
 
-/** 이름이 라벨 칸을 넘으면 잘라 준다. 넘치면 순위 배지를 덮는다. */
+/** 경주 전 — 미로가 아직 없다. 출발선에 세워만 둔다. */
+function drawGate(lanes, g){
+  ctx.fillStyle = '#8d8471';
+  ctx.font = '800 15px "Apple SD Gothic Neo",sans-serif';
+  ctx.textAlign = 'center';
+
+  if (!lanes.length){
+    ctx.fillText('출전한 메뉴가 없습니다', g.W / 2, g.H / 2);
+    return;
+  }
+  ctx.fillText('경주를 시작하면 미로가 만들어집니다', g.W / 2, 34);
+
+  const y = g.H / 2 + 24;
+  const gap = Math.min(120, (g.W - 60) / lanes.length);
+  const x0 = g.W / 2 - gap * (lanes.length - 1) / 2;
+
+  // 출발선
+  ctx.strokeStyle = '#e0d9c4'; ctx.lineWidth = 4; ctx.setLineDash([7, 7]);
+  ctx.beginPath(); ctx.moveTo(30, y + 6); ctx.lineTo(g.W - 30, y + 6); ctx.stroke();
+  ctx.setLineDash([]);
+
+  lanes.forEach((lane, i) => {
+    const x = x0 + i * gap;
+    hamster(x, y, Math.min(1.25, gap / 90), LANE_COLORS[i % LANE_COLORS.length],
+            anim + i * 17, 'idle', false);
+    ctx.fillStyle = INK; ctx.font = '800 12.5px "Apple SD Gothic Neo",sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(clip(lane.name, gap - 8), x, y + 26);
+  });
+}
+
+function drawMaze(g){
+  const {cols, rows, cell} = g;
+
+  // 바닥
+  roundRect(g.pad - 5, g.head + g.pad - 5, cols * cell + 10, rows * cell + 10, 10);
+  ctx.fillStyle = '#faf6e9'; ctx.fill();
+
+  // 최단 경로 — 옅게 깔아 햄스터가 얼마나 벗어나는지 견줄 수 있게 한다
+  const opt = raceData.optimalPath;
+  ctx.strokeStyle = 'rgba(255,210,30,.85)';
+  ctx.lineWidth = Math.max(6, cell * 0.5);
+  ctx.lineJoin = ctx.lineCap = 'round';
+  ctx.beginPath();
+  opt.forEach((c, i) => i ? ctx.lineTo(cellX(c, g), cellY(c, g))
+                          : ctx.moveTo(cellX(c, g), cellY(c, g)));
+  ctx.stroke();
+
+  // 벽
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = Math.max(2.5, cell * 0.11);
+  ctx.lineCap = 'square';
+  ctx.beginPath();
+  for (let c = 0; c < cols * rows; c++){
+    const x = g.pad + (c % cols) * cell, y = g.head + g.pad + Math.floor(c / cols) * cell;
+    const w = raceData.walls[c];
+    if (w & 1){ ctx.moveTo(x, y); ctx.lineTo(x + cell, y); }              // 북
+    if (w & 2){ ctx.moveTo(x + cell, y); ctx.lineTo(x + cell, y + cell); } // 동
+    if (w & 4){ ctx.moveTo(x, y + cell); ctx.lineTo(x + cell, y + cell); } // 남
+    if (w & 8){ ctx.moveTo(x, y); ctx.lineTo(x, y + cell); }              // 서
+  }
+  ctx.stroke();
+  ctx.lineCap = 'round';
+
+  // 출발 · 출구
+  drawIcon('compass-fill', cellX(raceData.start, g), cellY(raceData.start, g),
+           cell * 0.6, 'rgba(22,19,14,.4)');
+  const gx = cellX(raceData.goal, g), gy = cellY(raceData.goal, g);
+  ctx.beginPath(); ctx.arc(gx, gy, cell * 0.42, 0, 6.284);
+  ctx.fillStyle = '#f2542d'; ctx.fill();
+  drawIcon('flag-fill', gx, gy, cell * 0.5, '#fff');
+}
+
+function drawRunners(lanes, g){
+  const idx = Math.floor(step);
+  const frac = step - idx;
+  const n = lanes.length;
+
+  lanes.forEach((lane, i) => {
+    const color = LANE_COLORS[i % LANE_COLORS.length];
+    const path = lane.path;
+    const at = Math.min(idx, path.length - 1);
+    const next = Math.min(idx + 1, path.length - 1);
+
+    // 한 칸 안에서 서로 완전히 겹치지 않게 조금씩 벌려 둔다
+    const ang = (i / n) * 6.284;
+    const off = n > 1 ? g.cell * 0.16 : 0;
+    const ox = Math.cos(ang) * off, oy = Math.sin(ang) * off;
+
+    // 지나온 자취
+    ctx.strokeStyle = color + '80';
+    ctx.lineWidth = Math.max(1.5, g.cell * 0.07);
+    ctx.beginPath();
+    for (let k = 0; k <= at; k++){
+      const px = cellX(path[k], g) + ox, py = cellY(path[k], g) + oy;
+      k ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    }
+    ctx.stroke();
+
+    const ax = cellX(path[at], g), ay = cellY(path[at], g);
+    const bx = cellX(path[next], g), by = cellY(path[next], g);
+    const x = ax + (bx - ax) * frac + ox;
+    const y = ay + (by - ay) * frac + oy;
+
+    const done = lane.finishTick != null && step >= lane.finishTick;
+    const moving = raceState === 'run' && !done && (bx !== ax || by !== ay);
+    const mode = done ? 'cheer' : (moving ? 'run' : 'idle');
+
+    hamster(x, y + g.cell * 0.2, g.cell / 78, color, anim + i * 17, mode, bx < ax);
+  });
+}
+
+function drawHud(g){
+  const total = raceData.totalTicks;
+  ctx.fillStyle = INK;
+  ctx.font = '800 14px "Apple SD Gothic Neo",sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(raceState === 'gate' ? 'READY'
+      : `${Math.min(Math.floor(step), total)} / ${total} 걸음`, 14, 25);
+
+  const gx = 120, gw = g.W - gx - 14;
+  if (gw > 60){
+    roundRect(gx, 12, gw, 14, 7); ctx.fillStyle = '#efe9d8'; ctx.fill();
+    ctx.strokeStyle = INK; ctx.lineWidth = 2.2; ctx.stroke();
+    ctx.save(); roundRect(gx, 12, gw, 14, 7); ctx.clip();
+    ctx.fillStyle = '#f2542d';
+    ctx.fillRect(gx, 12, gw * Math.min(1, step / total), 14);
+    ctx.restore();
+  }
+}
+
+/** 이름이 칸을 넘으면 잘라 준다. */
 function clip(text, maxW){
   if (ctx.measureText(text).width <= maxW) return text;
   let s = text;
   while (s.length > 1 && ctx.measureText(s + '…').width > maxW) s = s.slice(0, -1);
   return s + '…';
-}
-
-// ── 카운트다운 ───────────────────────────────────
-let countStart = 0;
-function drawCountdown(){
-  const el = (anim - countStart) / 60;          // 초
-  const n = 3 - Math.floor(el);
-  ctx.fillStyle = 'rgba(22,19,14,.55)';
-  ctx.fillRect(0, 0, cv.width, cv.height);
-
-  const t = el % 1;
-  const scale = 1 + (1 - t) * 0.7;
-  ctx.save();
-  ctx.translate(cv.width / 2, cv.height / 2);
-  ctx.scale(scale, scale);
-  ctx.globalAlpha = Math.min(1, (1 - t) * 2.2);
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillStyle = n > 0 ? '#ffd21e' : '#f2542d';
-  ctx.font = `900 ${Math.round(cv.width / 11)}px "Apple SD Gothic Neo",sans-serif`;
-  ctx.lineWidth = 9; ctx.strokeStyle = INK;
-  const label = n > 0 ? String(n) : 'GO!';
-  ctx.strokeText(label, 0, 0);
-  ctx.fillText(label, 0, 0);
-  ctx.restore();
-  ctx.textBaseline = 'alphabetic';
 }
 
 // ── 색종이 ───────────────────────────────────────
@@ -697,10 +721,11 @@ function popConfetti(){
     c: LANE_COLORS[i % LANE_COLORS.length]
   }));
 }
-function drawConfetti(){
+function drawConfetti(dt){
   if (!confetti.length) return;
+  const k = Math.min(3, (dt || 1 / 60) * 60);      // 화면 주사율과 무관하게
   confetti.forEach(p => {
-    p.x += p.vx; p.y += p.vy; p.r += p.vr;
+    p.x += p.vx * k; p.y += p.vy * k; p.r += p.vr * k;
     ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
     ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.w / 4, p.w, p.w / 2);
     ctx.restore();
@@ -709,30 +734,36 @@ function drawConfetti(){
 }
 
 // ── 재생 ─────────────────────────────────────────
-function loop(){
-  anim++;
-  if (raceState === 'count'){
-    if (anim - countStart >= 240){
-      raceState = 'run'; frame = 0;
-      $('#headline').textContent = '출발했습니다';
-    }
-  } else if (raceState === 'run'){
-    frame += speedMul;
-    if (frame >= raceData.totalTicks){ frame = raceData.totalTicks; finishRace(); }
+/**
+ * 재생 루프.
+ *
+ * 진행량을 프레임 수가 아니라 <b>실제 흐른 시간</b>으로 센다.
+ * 프레임 기준으로 두면 60Hz 를 가정하게 되는데, 요즘 노트북 화면은 120Hz 라
+ * 같은 코드가 두 배 빠르게 재생된다 (실측 초당 9걸음 설정 → 17.5걸음).
+ * 화면 주사율이 재생 속도를 바꾸면 안 된다.
+ */
+let lastTime = 0, lastDraw = 0;
+function loop(now){
+  const dt = lastTime ? Math.min(0.1, (now - lastTime) / 1000) : 0;   // 초
+  lastTime = now;
+  anim += dt * 60;                       // 햄스터 동작도 시간 기준으로
+
+  if (raceState === 'run'){
+    step += SPEEDS[speedIdx].mps * dt;
+    if (step >= raceData.totalTicks){ step = raceData.totalTicks; finishRace(); }
   }
 
-  const busy = raceState === 'count' || raceState === 'run' || confetti.length;
-  // 경기 중이 아니면 숨쉬는 동작만 있으면 된다. 60fps 로 계속 그릴 이유가 없다.
-  if (busy || anim % 3 === 0) drawScene();
+  const busy = raceState === 'run' || confetti.length;
+  // 경기 중이 아니면 숨쉬는 동작만 있으면 된다. 쉬지 않고 그릴 이유가 없다.
+  if (busy || now - lastDraw > 50){ drawScene(dt); lastDraw = now; }
 
   // 경기가 끝나고 색종이까지 가라앉으면 더 그릴 것이 없다.
-  // 여기서 멈추지 않으면 결과 화면을 보는 내내 rAF 가 계속 돈다.
-  if (raceState === 'done' && !confetti.length){ rafId = null; return; }
+  if (raceState === 'done' && !confetti.length){ rafId = null; lastTime = 0; return; }
   rafId = requestAnimationFrame(loop);
 }
-function startLoop(){ if (!rafId) rafId = requestAnimationFrame(loop); }
+function startLoop(){ if (!rafId){ lastTime = 0; rafId = requestAnimationFrame(loop); } }
 
-// 창 크기가 바뀌면 트랙 치수가 달라진다. 루프가 멈춘 결과 화면에서도 다시 그려 준다.
+// 창 크기가 바뀌면 칸 크기가 달라진다. 루프가 멈춘 뒤에도 다시 그려 준다.
 let resizeTimer = null;
 addEventListener('resize', () => {
   clearTimeout(resizeTimer);
@@ -740,26 +771,43 @@ addEventListener('resize', () => {
 });
 
 $('#speedBtn').onclick = () => {
-  speedMul = speedMul === 1 ? 2 : speedMul === 2 ? 4 : 1;
-  $('#speedBtn').textContent = `재생속도 ×${speedMul}`;
+  speedIdx = (speedIdx + 1) % SPEEDS.length;
+  $('#speedLabel').textContent = SPEEDS[speedIdx].label;
 };
 
 $('#raceBtn').onclick = async () => {
   try {
     $('#raceBtn').disabled = true;
-    notice('출발선 정렬 중…');
+    notice('미로를 만드는 중…');
     raceData = await api(`/api/battles/${battle.id}/race`, {method:'POST'});
     $('#seed').textContent =
-      `시드 ${raceData.seed} · ${raceData.totalTicks}틱 · 같은 시드로 언제든 같은 경기를 재현할 수 있습니다`;
-    $('#headline').textContent = '잠시 후 출발합니다';
+      `시드 ${raceData.seed} · 이 시드 하나로 미로와 주행을 그대로 재현할 수 있습니다`;
+    $('#optInfo').textContent =
+      `최단 ${raceData.optimalLength}칸 · 전체 ${raceData.totalTicks}걸음`;
+    $('#headline').textContent = '출발했습니다';
     $('#board').innerHTML = ''; $('#podium').innerHTML = '';
-    confetti = [];
-    frame = 0; countStart = anim; raceState = 'count';
+    confetti = []; step = 0; raceState = 'run';
     $('#stageChip').textContent = '경기 중';
+    $('#againBtn').hidden = true;
+    startLoop();
   } catch(e){
     notice(e.message, 'err');
     $('#raceBtn').disabled = false;
   }
+};
+
+$('#againBtn').onclick = async () => {
+  try {
+    $('#againBtn').disabled = true;
+    await api(`/api/battles/${battle.id}/race`, {method:'DELETE'});
+    raceData = null; raceState = 'gate'; step = 0; confetti = [];
+    $('#board').innerHTML = ''; $('#podium').innerHTML = '';
+    $('#seed').textContent = ''; $('#optInfo').textContent = '';
+    await loadBattle();
+    notice('경주 기록을 지웠습니다. 같은 참가자로 새 미로에서 다시 달릴 수 있습니다', 'ok');
+    startLoop();
+  } catch(e){ notice(e.message, 'err'); }
+  finally { $('#againBtn').disabled = false; }
 };
 
 function finishRace(){
@@ -768,38 +816,41 @@ function finishRace(){
   popConfetti();
 
   const ranked = [...raceData.lanes].sort((a, b) => a.rank - b.rank);
-  const medal = ['🥇','🥈','🥉'];
-  const colorOf = name => {
-    const order = [...raceData.lanes].sort((a, b) => a.candidateId - b.candidateId);
-    return LANE_COLORS[order.findIndex(l => l.restaurantName === name) % LANE_COLORS.length];
-  };
+  const medals = ['trophy-fill', 'award-fill', 'award-fill'];
+  const medalColor = ['#e0a300', '#8d8d8d', '#b06a2c'];
+  const order = [...raceData.lanes].sort((a, b) => a.candidateId - b.candidateId);
+  const colorOf = name =>
+    LANE_COLORS[order.findIndex(l => l.restaurantName === name) % LANE_COLORS.length];
 
-  $('#headline').textContent = '📢 ' + raceData.headline;
+  $('#headline').textContent = raceData.headline;
   $('#stageChip').textContent = '경기 종료';
 
   $('#podium').innerHTML = ranked.slice(0, 3).map((l, i) => `
     <div class="pod ${i === 0 ? 'first' : ''}">
-      <span class="mdl">${medal[i]}</span>
+      <span class="mdl" style="color:${medalColor[i]}">${icon(medals[i])}</span>
       <span style="width:14px;height:14px;border-radius:50%;flex:none;
                    border:2px solid var(--ink);background:${colorOf(l.restaurantName)}"></span>
       <span class="who">
         <b>${esc(l.restaurantName)}</b>
-        <span>${l.finishTick != null ? l.finishTick + '틱 완주' : '미완주'} · 응원 ${l.voteCount}표</span>
+        <span>${l.finishTick != null ? l.finishTick + '걸음 만에 탈출' : '탈출 실패'} · 응원 ${l.voteCount}표</span>
       </span>
     </div>`).join('');
 
   $('#board').innerHTML = `<div class="twrap"><table>
     <thead><tr><th>순위</th><th>메뉴</th><th>스카우팅</th>
-      <th class="n">속도</th><th class="n">지구력</th><th class="n">순간가속</th>
-      <th class="n">응원</th><th class="n">짐</th><th class="n">완주</th></tr></thead>
+      <th class="n">판단력</th><th class="n">발놀림</th>
+      <th class="n">응원</th><th class="n">짐</th>
+      <th class="n">걸음</th><th class="n">효율</th><th class="n">탈출</th></tr></thead>
     <tbody>${ranked.map((l, i) => `<tr class="${i === 0 ? 'win' : ''}">
-      <td>${medal[i] || (i + 1)}</td>
+      <td class="mdl" style="color:${medalColor[i] || 'inherit'}">${medals[i] ? icon(medals[i]) : (i + 1)}</td>
       <td><b>${esc(l.restaurantName)}</b></td>
       <td class="note">${esc(l.scouting)}</td>
-      <td class="n">${l.speed}</td><td class="n">${l.stamina}</td><td class="n">${l.burst}</td>
+      <td class="n">${l.sense}</td><td class="n">${l.pace}</td>
       <td class="n">${l.cheerBonus > 0 ? '+' + l.cheerBonus : '–'}</td>
       <td class="n">${l.handicap > 0 ? '−' + l.handicap : '–'}</td>
-      <td class="n">${l.finishTick ?? '미완주'}</td></tr>`).join('')}
+      <td class="n">${l.steps}</td>
+      <td class="n">${l.efficiency}%</td>
+      <td class="n">${l.finishTick ?? '실패'}</td></tr>`).join('')}
     </tbody></table></div>`;
 
   notice(`오늘 점심은 ${raceData.winnerName} 입니다`, 'ok');

@@ -4,9 +4,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 /**
- * 레이스에 출전한 햄스터 한 마리.
+ * 경주에 출전한 햄스터 한 마리.
  *
- * 스탯은 경기마다 새로 뽑는다. 같은 식당이라도 어제 빠르던 햄스터가 오늘 느릴 수 있다.
+ * 스탯은 경기마다 새로 뽑는다. 같은 식당이라도 어제 길을 잘 찾던 햄스터가
+ * 오늘은 막다른 길만 골라 들어갈 수 있다.
  */
 @Entity
 @Table(name = "race_lanes")
@@ -24,25 +25,25 @@ public class RaceLane {
     @JoinColumn(name = "candidate_id", nullable = false)
     private Candidate candidate;
 
-    /** 기본 속도. */
+    /** 판단력. 갈림길에서 최단 경로 쪽을 고를 확률. */
     @Column(nullable = false)
-    private Double speed;
+    private Double sense;
 
-    /** 지구력. 낮으면 후반에 처진다. */
+    /** 발놀림. 한 걸음을 실제로 내디딜 확률. */
     @Column(nullable = false)
-    private Double stamina;
+    private Double pace;
 
-    /** 순간 가속이 터질 확률. */
-    @Column(nullable = false)
-    private Double burst;
-
-    /** 응원(득표)으로 받은 가산. */
+    /** 응원(득표)으로 받은 판단력 가산. */
     @Column(name = "cheer_bonus", nullable = false)
     private Double cheerBonus;
 
-    /** 최근 우승으로 짊어진 짐. 무거울수록 느리다. */
+    /** 최근 우승으로 깎인 발놀림. 배가 부르면 굼뜨다. */
     @Column(nullable = false)
     private Double handicap;
+
+    /** 실제로 내디딘 걸음 수. 최단 경로와 견주면 얼마나 헤맸는지 나온다. */
+    @Column(nullable = false)
+    private Integer steps;
 
     /** 결승 통과 시점. 완주 못 했으면 null. */
     @Column(name = "finish_tick")
