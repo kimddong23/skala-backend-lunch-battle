@@ -4,13 +4,20 @@
 후보로 오른 메뉴마다 햄스터 한 마리가 같은 미로에 들어가고,
 미로 끝의 견과류에 먼저 닿은 메뉴가 오늘의 점심이 된다.
 
+[![런치 배틀 시연 영상](docs/media/demo_thumb.png)](https://youtu.be/G_7wqJFDAEg)
+
+**[▶ 시연 영상 보기 (1분 49초)](https://youtu.be/G_7wqJFDAEg)** — 출전 등록과 응원 · 미로 경주 ·
+결과 · 전적 기록실 · API 문서(저장된 시드 재조회) · 다시 하기
+
+작성 : 신주용 (광주 3반, G086)
+
+## 미로 경주
+
 ![미로 경주](docs/media/race.gif)
 
 노란 길은 서버가 BFS 로 구해 둔 **최단 경로**다. 햄스터는 매 걸음 판단력만큼의 확률로
 그 길을 따르고, 아니면 아무 데나 간다 — 그래서 얼마나 헤매는지가 그대로 보인다.
-▶ **[구동 영상 (YouTube)](https://youtu.be/oLkhYOxpYRU)** · 원본 파일은 [`docs/media/race.mp4`](docs/media/race.mp4)
-
-작성 : 신주용 (광주 3반, G086)
+([원본 파일](docs/media/race.mp4))
 
 ## 개발 환경
 
