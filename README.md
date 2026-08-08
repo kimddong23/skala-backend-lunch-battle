@@ -23,7 +23,7 @@ DB 는 인메모리라 종료하면 사라진다. 기동할 때마다 `data.sql`
 지난 배틀 5건이 채워진다.
 
 ```bash
-./gradlew test        # 테스트 62건
+./gradlew test        # 테스트 61건
 ./gradlew bootJar     # 실행 가능한 jar
 ```
 
@@ -68,7 +68,7 @@ com.skala.lunch
 ├── controller   REST 진입점 (7)
 ├── service      업무 규칙 (11)  · Maze: 미로 생성 + BFS 최단 경로
 ├── repository   JPA (8)
-├── mapper       MyBatis (집계 조회 8종)
+├── mapper       MyBatis (집계 조회 9종)
 ├── entity       도메인 (9)
 ├── dto          입출력 (14)
 ├── exception    예외 + 전역 처리기
@@ -91,7 +91,7 @@ com.skala.lunch
 | 분석 | `GET /api/analysis/{ranking\|department-taste\|picky-index\|category-share\|weekday-trend\|participation\|cheer-effect}` |
 | 감사 | `GET /api/audit-logs` |
 
-전체 31개 경로는 Swagger 에서 확인할 수 있다.
+전체 32개 경로는 Swagger 에서 확인할 수 있다.
 
 ## 눈여겨볼 부분
 
