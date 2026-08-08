@@ -6,8 +6,7 @@
 
 [![런치 배틀 시연 영상](docs/media/demo_thumb.png)](https://youtu.be/G_7wqJFDAEg)
 
-**[▶ 시연 영상 보기 (1분 49초)](https://youtu.be/G_7wqJFDAEg)** — 출전 등록과 응원 · 미로 경주 ·
-결과 · 전적 기록실 · API 문서(저장된 시드 재조회) · 다시 하기
+**[▶ 시연 영상 보기 (1분 49초)](https://youtu.be/G_7wqJFDAEg)**
 
 작성 : 신주용 (광주 3반, G086)
 
