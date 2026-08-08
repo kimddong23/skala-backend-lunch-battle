@@ -18,7 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/audit-logs")
 @RequiredArgsConstructor
-@Tag(name = "6. AOP 감사 로그", description = "AOP 가 자동으로 남긴 투표 기록")
+@Tag(name = "7. AOP 감사 로그", description = "AOP 가 자동으로 남긴 투표 기록")
 public class VoteAuditController {
 
     private final VoteAuditLogRepository repository;

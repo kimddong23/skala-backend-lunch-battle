@@ -18,7 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/analysis")
 @RequiredArgsConstructor
-@Tag(name = "5. 분석 (MyBatis)", description = "조인·집계·순위 — SQL Mapper 로 처리")
+@Tag(name = "6. 분석 (MyBatis)", description = "조인·집계·순위 — SQL Mapper 로 처리")
 public class AnalysisController {
 
     private final AnalysisService analysisService;

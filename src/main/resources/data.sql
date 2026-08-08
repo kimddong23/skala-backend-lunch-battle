@@ -14,23 +14,29 @@ INSERT INTO members (login_id, name, department, created_at) VALUES
 ('han',    '한신입', '개발팀',   CURRENT_TIMESTAMP);
 
 -- 식당 16곳
+-- 강남역 일대에서 실제로 영업 중인 식당들 (2026년 초 기준 공개 정보로 확인)
+-- 도보 시간과 가격은 각 매장의 공개된 위치·대표 메뉴 기준의 대략값이다.
+-- 실제 매장이므로 영업 상태·가격은 바뀔 수 있다.
 INSERT INTO restaurants (name, category, walk_minutes, price, active, created_at) VALUES
-('할매국밥',           '한식',       3,  9000,  TRUE, CURRENT_TIMESTAMP),
-('김치찌개의민족',     '한식',       5,  8500,  TRUE, CURRENT_TIMESTAMP),
-('성수동돈까스',       '일식',       7,  12000, TRUE, CURRENT_TIMESTAMP),
-('마라공장',           '중식',       6,  13000, TRUE, CURRENT_TIMESTAMP),
-('회전초밥천국',       '일식',       12, 18000, TRUE, CURRENT_TIMESTAMP),
-('파스타는사랑',       '양식',       9,  15000, TRUE, CURRENT_TIMESTAMP),
-('분식왕떡볶이',       '분식',       2,  7000,  TRUE, CURRENT_TIMESTAMP),
-('쌀국수한그릇',       '아시안',     8,  11000, TRUE, CURRENT_TIMESTAMP),
-('샐러디샐러드',       '샐러드',     4,  10000, TRUE, CURRENT_TIMESTAMP),
-('버거인더하우스',     '패스트푸드', 5,  9500,  TRUE, CURRENT_TIMESTAMP),
-('짜장면vs짬뽕',       '중식',       10, 9000,  TRUE, CURRENT_TIMESTAMP),
-('제육의정석',         '한식',       4,  9500,  TRUE, CURRENT_TIMESTAMP),
-('규동집',             '일식',       6,  11000, TRUE, CURRENT_TIMESTAMP),
-('타코형제',           '양식',       11, 13500, TRUE, CURRENT_TIMESTAMP),
-('국수나무그늘',       '한식',       3,  8000,  TRUE, CURRENT_TIMESTAMP),
-('사장님이미쳤어요',   '한식',       15, 6000,  FALSE, CURRENT_TIMESTAMP);
+('강남불백',           '한식',       5,  7000,  TRUE, CURRENT_TIMESTAMP),
+('강남진해장',         '한식',       4,  11000, TRUE, CURRENT_TIMESTAMP),
+('1992덮밥짜글이',     '한식',       3,  13000, TRUE, CURRENT_TIMESTAMP),
+('무월식탁',           '한식',       6,  12800, TRUE, CURRENT_TIMESTAMP),
+('오미라식당',         '한식',       8,  10000, TRUE, CURRENT_TIMESTAMP),
+('오레노라멘',         '일식',       3,  13000, TRUE, CURRENT_TIMESTAMP),
+('스시마이우',         '일식',       5,  9500,  TRUE, CURRENT_TIMESTAMP),
+('도원참치',           '일식',       2,  22900, TRUE, CURRENT_TIMESTAMP),
+('신복면관',           '중식',       2,  12000, TRUE, CURRENT_TIMESTAMP),
+('마유유',             '중식',       5,  11000, TRUE, CURRENT_TIMESTAMP),
+('고에몬',             '양식',       2,  14000, TRUE, CURRENT_TIMESTAMP),
+('도치피자',           '양식',       4,  16000, TRUE, CURRENT_TIMESTAMP),
+('꽃보다라면',         '분식',       7,  6500,  TRUE, CURRENT_TIMESTAMP),
+('이조불쭈꾸미',       '분식',       6,  15000, TRUE, CURRENT_TIMESTAMP),
+('베트남이랑',         '아시안',     5,  12900, TRUE, CURRENT_TIMESTAMP),
+('호앙비엣',           '아시안',     9,  10500, TRUE, CURRENT_TIMESTAMP),
+('올라포케',           '샐러드',     4,  12000, TRUE, CURRENT_TIMESTAMP),
+('힘난다버거',         '패스트푸드', 4,  9400,  TRUE, CURRENT_TIMESTAMP),
+('사이공본가',         '아시안',     3,  6500,  FALSE, CURRENT_TIMESTAMP);
 
 -- 지난 배틀 5건 (랭킹·요일별·참여율 통계가 비어 보이지 않도록 이력을 깔아둠)
 --
@@ -45,20 +51,23 @@ INSERT INTO battles (battle_date, status, closes_at, winner_restaurant_id, close
 (DATEADD('DAY', -2, CURRENT_DATE), 'CLOSED', DATEADD('DAY', -2, CURRENT_TIMESTAMP), 12, DATEADD('DAY', -2, CURRENT_TIMESTAMP), DATEADD('DAY', -2, CURRENT_TIMESTAMP)),
 (DATEADD('DAY', -1, CURRENT_DATE), 'CLOSED', DATEADD('DAY', -1, CURRENT_TIMESTAMP), 2,  DATEADD('DAY', -1, CURRENT_TIMESTAMP), DATEADD('DAY', -1, CURRENT_TIMESTAMP));
 
--- 평점 (식당별 편차가 생기도록)
+-- 평점 (식당별 편차가 생기도록) — 코멘트는 해당 식당의 대표 메뉴에 맞춘다
 INSERT INTO reviews (member_id, restaurant_id, score, comment, created_at, updated_at) VALUES
-(1, 1, 5, '국밥은 진리입니다',           CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(2, 1, 4, '뜨끈하고 좋음',               CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(3, 2, 2, '이번 주에만 세 번째입니다',   CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(4, 2, 3, '무난',                        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(5, 3, 5, '돈까스는 배신하지 않는다',    CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(6, 4, 5, '마라탕 없인 못 살아',         CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(7, 4, 1, '너무 매워서 오후 일을 못했다', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(8, 5, 4, '가끔은 사치도 필요',          CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(9, 7, 4, '떡볶이는 언제나 옳다',        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(10, 9, 2, '점심에 풀만 먹으면 힘이 안 난다', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(11, 3, 5, '성수동돈까스 최고',          CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(12, 12, 4, '제육 맛집 인정',            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+(1,  1,  5, '불백정식 7천원이면 반칙이죠',        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(2,  1,  4, '반찬까지 풀세팅이라 든든합니다',      CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(3,  2,  2, '이번 주에만 세 번째 해장국입니다',    CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(4,  2,  3, '24시간이라는 게 제일 큰 장점',        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(5,  3,  5, '된장짜글이에 밥 비비면 끝납니다',     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(6,  6,  5, '면 리필 무료라 점심에 과식합니다',    CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(7,  6,  4, '12시 넘어 가면 줄이 깁니다',          CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(8,  8,  4, '런치세트는 가끔 부리는 사치',         CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(9,  13, 4, '라면에 김치볶음밥은 언제나 옳다',     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(10, 17, 2, '점심에 풀만 먹으면 힘이 안 납니다',   CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(11, 5,  5, '만원에 뷔페라니 계산이 안 맞습니다',  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(12, 15, 4, '고수 셀프바가 있어서 좋습니다',       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(1,  10, 3, '마라탕은 맵기 조절이 생명',           CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(4,  11, 4, '명란 파스타가 생각보다 든든합니다',   CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(7,  18, 3, '패티는 두툼한데 자리가 좁습니다',     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- 지난 배틀의 후보와 투표 이력
 -- 편식 지수·부서별 취향·요일별 경향이 의미를 가지려면 사원마다 표가 여러 건 있어야 한다.

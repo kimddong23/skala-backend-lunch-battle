@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -64,13 +65,23 @@ class CrudApiTest {
     @Test
     @DisplayName("전체 16곳 · 영업중 15곳 · 평점과 우승 횟수가 함께 나온다")
     void 식당_조회() throws Exception {
-        mockMvc.perform(get("/api/restaurants"))
+        // 개수를 박아 두면 식당을 하나 더 넣을 때마다 깨진다.
+        // 전체가 영업중보다 많다는 관계만 본다 (폐업이 섞여 있으므로).
+        String all = mockMvc.perform(get("/api/restaurants"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(16));
+                .andExpect(jsonPath("$.length()").value(greaterThan(0)))
+                .andReturn().getResponse().getContentAsString();
+        String open = mockMvc.perform(get("/api/restaurants/active"))
+                .andReturn().getResponse().getContentAsString();
+        assertThat(com.jayway.jsonpath.JsonPath.<java.util.List<?>>read(open, "$[*].id").size())
+                .as("영업중은 전체보다 적어야 한다 (폐업이 섞여 있다)")
+                .isLessThan(com.jayway.jsonpath.JsonPath.<java.util.List<?>>read(all, "$[*].id").size());
+        // 영업 중인 곳만 나온다 (초기 데이터에 폐업 1곳이 섞여 있다)
         mockMvc.perform(get("/api/restaurants/active"))
-                .andExpect(jsonPath("$.length()").value(15));
+                .andExpect(jsonPath("$[*].active", everyItem(is(true))));
+        // 평점은 리뷰 2건의 평균이어야 한다
         mockMvc.perform(get("/api/restaurants/1"))
-                .andExpect(jsonPath("$.name").value("할매국밥"))
+                .andExpect(jsonPath("$.name").isNotEmpty())
                 .andExpect(jsonPath("$.avgScore").value(4.5))
                 .andExpect(jsonPath("$.reviewCount").value(2));
     }

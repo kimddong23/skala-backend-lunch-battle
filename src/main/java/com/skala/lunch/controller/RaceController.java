@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/battles/{battleId}/race")
 @RequiredArgsConstructor
-@Tag(name = "4. 햄스터 미로 경주",
+@Tag(name = "5. 햄스터 미로 경주",
      description = "후보 메뉴가 햄스터로 미로를 달린다. 출구를 먼저 찾은 메뉴가 오늘의 점심")
 public class RaceController {
 

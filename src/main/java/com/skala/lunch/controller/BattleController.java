@@ -19,7 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/battles")
 @RequiredArgsConstructor
-@Tag(name = "3. 점심 배틀", description = "후보 등록 · 투표 · 마감")
+@Tag(name = "4. 점심 배틀", description = "후보 등록 · 투표 · 마감")
 public class BattleController {
 
     private final BattleService battleService;

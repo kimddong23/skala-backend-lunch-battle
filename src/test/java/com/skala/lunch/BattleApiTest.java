@@ -116,9 +116,18 @@ class BattleApiTest {
     @Test
     @DisplayName("영업하지 않는 식당은 후보로 올릴 수 없다")
     void 폐업_식당() throws Exception {
-        // data.sql 의 16번은 active=false
+        // 번호를 박아 두면 초기 데이터가 바뀔 때 조용히 다른 식당을 찌르게 된다.
+        // 전체 목록에서 영업하지 않는 곳을 직접 찾아 쓴다.
+        String all = mockMvc.perform(get("/api/restaurants"))
+                .andReturn().getResponse().getContentAsString();
+        java.util.List<Integer> closed = com.jayway.jsonpath.JsonPath
+                .read(all, "$[?(@.active == false)].id");
+        org.assertj.core.api.Assertions.assertThat(closed)
+                .as("초기 데이터에 폐업 식당이 있어야 이 검사가 의미를 가진다").isNotEmpty();
+
         mockMvc.perform(post("/api/battles/" + battleId + "/candidates")
-                        .param("restaurantId", "16").param("memberId", "1"))
+                        .param("restaurantId", String.valueOf(closed.get(0)))
+                        .param("memberId", "1"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -213,22 +222,32 @@ class BattleApiTest {
     @Test
     @DisplayName("표만으로 마감하면 최다 득표가 이긴다")
     void 득표로_마감() throws Exception {
-        long kimchi = addCandidate(2, 1);
-        long gukbap = addCandidate(1, 1);
+        // 식당 이름을 박아 두면 초기 데이터를 손볼 때마다 깨진다. 조회해서 쓴다.
+        String more = restaurantName(2), less = restaurantName(1);
 
-        for (long m : new long[]{1, 2, 3, 4, 5}) vote(m, kimchi);   // 5표
-        for (long m : new long[]{6, 7, 8, 9}) vote(m, gukbap);      // 4표
+        long a = addCandidate(2, 1);
+        long b = addCandidate(1, 1);
+
+        for (long m : new long[]{1, 2, 3, 4, 5}) vote(m, a);   // 5표
+        for (long m : new long[]{6, 7, 8, 9}) vote(m, b);      // 4표
 
         mockMvc.perform(get("/api/battles/" + battleId))
-                .andExpect(jsonPath("$.candidates[0].restaurantName").value("김치찌개의민족"))
+                .andExpect(jsonPath("$.candidates[0].restaurantName").value(more))
                 .andExpect(jsonPath("$.candidates[0].voteCount").value(5))
-                .andExpect(jsonPath("$.candidates[1].restaurantName").value("할매국밥"))
+                .andExpect(jsonPath("$.candidates[1].restaurantName").value(less))
                 .andExpect(jsonPath("$.candidates[1].voteCount").value(4));
 
         mockMvc.perform(post("/api/battles/" + battleId + "/close"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CLOSED"))
-                .andExpect(jsonPath("$.winnerName").value("김치찌개의민족"));
+                .andExpect(jsonPath("$.winnerName").value(more));
+    }
+
+    /** 초기 데이터의 식당 이름을 조회해 온다. */
+    private String restaurantName(long id) throws Exception {
+        String body = mockMvc.perform(get("/api/restaurants/" + id))
+                .andReturn().getResponse().getContentAsString();
+        return com.jayway.jsonpath.JsonPath.read(body, "$.name");
     }
 
 
