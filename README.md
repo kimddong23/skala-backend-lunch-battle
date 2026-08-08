@@ -8,7 +8,7 @@
 
 노란 길은 서버가 BFS 로 구해 둔 **최단 경로**다. 햄스터는 매 걸음 판단력만큼의 확률로
 그 길을 따르고, 아니면 아무 데나 간다 — 그래서 얼마나 헤매는지가 그대로 보인다.
-([더 선명한 영상](docs/media/race.mp4))
+▶ **[구동 영상 (YouTube)](https://youtu.be/oLkhYOxpYRU)** · 원본 파일은 [`docs/media/race.mp4`](docs/media/race.mp4)
 
 작성 : 신주용 (광주 3반, G086)
 
@@ -26,6 +26,38 @@
 
 의존성 버전은 `build.gradle` 에 고정되어 있고, JDK 는 toolchain 으로 지정해
 로컬에 설치된 자바 버전과 무관하게 21 로 빌드된다.
+
+## 구조
+
+계층(controller/service/repository)이 아니라 **도메인**으로 나눴다. 한 기능을 고칠 때
+폴더 네 곳을 오가지 않고 한 폴더 안에서 끝나고, 도메인 간 참조가 import 로 드러나
+경계가 무너지면 컴파일 시점에 보인다.
+
+```
+com.skala.lunch
+├── member         사원 (5)          ─┐
+├── restaurant     식당 (5)           ├ 기본 CRUD
+├── review         리뷰 (5)          ─┘
+├── battle         배틀·후보·투표 (13)   1인 1표, 마감, 규칙 판정
+├── race           미로 경주 (7)
+│   └── maze       미로 생성 + BFS 최단 경로 (1)
+├── analysis       MyBatis 집계 조회 (4)
+│   └── dto        집계 결과 (8)
+├── audit          투표 감사 로그 — AOP 로 수집 (5)
+└── global         도메인에 속하지 않는 공통
+    ├── aop        실행시간 측정 (1)
+    └── error      예외 + 전역 처리기 (5)
+```
+
+각 도메인 폴더 안에는 그 도메인의 Controller · Service · Repository · Entity · DTO 가
+함께 있다. `global` 만 도메인이 아니라 전 계층을 가로지르는 공통 관심사다.
+테스트도 같은 구조를 따른다 — `src/test/java/com/skala/lunch/{battle,race,race/maze,analysis,global}`.
+여러 도메인에 걸친 CRUD 테스트만 최상위에 둔다.
+
+**JPA 와 MyBatis 를 나눠 쓴다.** 단건 조회·저장·존재 검사처럼 엔티티를 다루는 일은 JPA 가,
+랭킹·부서별 취향·편식 지수처럼 여러 테이블을 묶어 집계하는 일은 MyBatis 가 맡는다.
+목록 화면의 집계를 JPA 로 돌리면 항목 수만큼 질의가 늘어나(N+1) 실제로 식당 목록에서
+33개 질의가 나갔다. SQL 한 문장으로 바꿔 1개로 줄였다.
 
 ## 실행
 
@@ -93,25 +125,6 @@ DB 는 인메모리라 종료하면 사라진다. 기동할 때마다 `data.sql`
 
 미로와 스탯과 주행은 모두 시드 하나에서 나온다. 그 시드를 저장해 두므로
 같은 경기를 언제든 그대로 재현할 수 있다 — "짜고 친 것 아니냐"에 답할 수 있어야 한다.
-
-## 구조
-
-```
-com.skala.lunch
-├── controller   REST 진입점 (7)
-├── service      업무 규칙 (11)  · Maze: 미로 생성 + BFS 최단 경로
-├── repository   JPA (8)
-├── mapper       MyBatis (집계 조회 9종)
-├── entity       도메인 (9)
-├── dto          입출력 (14)
-├── exception    예외 + 전역 처리기
-└── aop          실행시간 측정 · 투표 감사 로그
-```
-
-**JPA 와 MyBatis 를 나눠 쓴다.** 단건 조회·저장·존재 검사처럼 엔티티를 다루는 일은 JPA 가,
-랭킹·부서별 취향·편식 지수처럼 여러 테이블을 묶어 집계하는 일은 MyBatis 가 맡는다.
-목록 화면의 집계를 JPA 로 돌리면 항목 수만큼 질의가 늘어나(N+1) 실제로 식당 목록에서
-33개 질의가 나갔다. SQL 한 문장으로 바꿔 1개로 줄였다.
 
 ## API
 

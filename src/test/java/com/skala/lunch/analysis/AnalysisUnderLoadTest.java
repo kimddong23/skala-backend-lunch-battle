@@ -1,4 +1,4 @@
-package com.skala.lunch;
+package com.skala.lunch.analysis;
 
 import com.skala.lunch.battle.BattleDto;
 import com.skala.lunch.battle.VoteRequestDto;

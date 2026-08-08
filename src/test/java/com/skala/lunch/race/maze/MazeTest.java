@@ -1,4 +1,4 @@
-package com.skala.lunch;
+package com.skala.lunch.race.maze;
 
 import com.skala.lunch.race.maze.Maze;
 import org.junit.jupiter.api.DisplayName;

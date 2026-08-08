@@ -1,4 +1,4 @@
-package com.skala.lunch;
+package com.skala.lunch.analysis;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

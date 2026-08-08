@@ -1,4 +1,4 @@
-package com.skala.lunch;
+package com.skala.lunch.race;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

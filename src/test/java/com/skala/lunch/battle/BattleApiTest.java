@@ -1,4 +1,4 @@
-package com.skala.lunch;
+package com.skala.lunch.battle;
 
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
