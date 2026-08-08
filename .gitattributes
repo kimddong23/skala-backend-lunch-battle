@@ -4,7 +4,12 @@
 # 윈도우 배치 파일은 CRLF 여야 실행된다.
 *.bat text eol=crlf
 
-# 바이너리
-*.jar binary
-*.png binary
-*.pdf binary
+# 바이너리 — 개행 정규화가 끼면 파일이 깨진다.
+*.jar  binary
+*.png  binary
+*.jpg  binary
+*.gif  binary
+*.mp4  binary
+*.pdf  binary
+*.woff binary
+*.woff2 binary

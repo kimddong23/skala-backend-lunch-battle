@@ -24,7 +24,7 @@ public class ExecutionTimeAspect {
      * 이름이 Service 로 끝나는 클래스의 public 메서드만.
      *
      * 처음엔 service 패키지 전체를 잡았는데, 설정값 클래스(BattleRules)의 getter 까지
-     * 계측되어 로그의 3분의 2가 getRepeatPenalty() 로 채워졌다.
+     * 계측되어 로그의 3분의 2가 설정 조회로 채워졌다.
      * 보고 싶은 것은 업무 처리이지 설정 조회가 아니다.
      */
     @Pointcut("execution(public * com.skala.lunch.service.*Service.*(..))")
