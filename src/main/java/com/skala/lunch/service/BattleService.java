@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * 점심 배틀 진행.
  *
  * 하루에 배틀 하나, 사원 한 명당 한 표.
- * 표는 그 자체로 우승을 정하지 않는다 — 미로 경주에서 판단력 가산으로 쓰인다.
+ * 표는 경주 결과에 아무 영향을 주지 않는다. 그날의 취향 기록으로 남아 통계에 쓰인다.
  */
 @Slf4j
 @Service
@@ -108,6 +108,7 @@ public class BattleService {
                             .winnerName(s.getWinnerName())
                             .totalVotes(votes)
                             .comment(BattleComments.forBattle(b, s.getWinnerName(), votes))
+                            .cheerNotice(BattleComments.cheerNotice(b.getId()))
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -316,6 +317,7 @@ public class BattleService {
                 .closesAt(battle.getClosesAt())
                 .closedAt(battle.getClosedAt())
                 .winnerName(battle.getWinner() == null ? null : battle.getWinner().getName())
+                .cheerNotice(BattleComments.cheerNotice(battle.getId()))
                 .totalVotes(totalVotes);
 
         if (withCandidates) {
@@ -339,10 +341,6 @@ public class BattleService {
         double share = totalVotes == 0 ? 0.0
                 : Math.round(c.getVoteCount() * 1000.0 / totalVotes) / 10.0;
 
-        // 지금 득표라면 경주에서 얼마를 받는지. 계산식은 RaceService 와 같아야 한다.
-        double cheer = totalVotes == 0 ? 0.0
-                : Math.round(RaceService.MAX_CHEER * c.getVoteCount() / totalVotes * 100.0) / 100.0;
-
         return CandidateDto.builder()
                 .id(c.getId())
                 .restaurantId(c.getRestaurant().getId())
@@ -353,7 +351,6 @@ public class BattleService {
                 .addedByName(c.getAddedBy().getName())
                 .voteCount(c.getVoteCount())
                 .sharePercent(share)
-                .cheerBonus(cheer)
                 .build();
     }
 }

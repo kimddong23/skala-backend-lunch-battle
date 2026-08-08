@@ -24,10 +24,12 @@ import java.util.*;
  * 미로의 최단 경로는 BFS 로 미리 구해 두고, 햄스터는 매 걸음
  * 그 길을 따를지(판단력) 아무 데나 갈지를 뽑는다.
  *
- * 이렇게 두는 이유가 있다. 순전히 운으로 이기는 경주라면 투표 화면은 장식일 뿐이다.
- * 여기서 <b>응원(득표)은 판단력을 올린다</b> — 표를 받은 메뉴는 갈림길에서 옳은 쪽을
- * 더 자주 고른다. 다만 결정하지는 못한다. 표를 몰아줘도 길치 햄스터가 요행으로
- * 지름길에 들어서면 뒤집힌다.
+ * <b>득표는 경주에 아무 영향을 주지 않는다.</b> 표를 많이 받았다고 길을 더 잘 찾지 않고,
+ * 스탯은 전원 같은 분포에서 뽑는다. 응원으로 유리해지면 그건 경주가 아니라 편파판정이다.
+ * 표는 그날 무엇을 먹고 싶었는지의 기록으로 남아 통계(부서별 취향·편식 지수 등)에 쓰인다.
+ *
+ * 공정하다는 말은 주장이 아니라 측정으로 확인한다 — RaceFairnessTest 에서 한쪽에 표를
+ * 몰아준 뒤 그 후보의 우승률이 1/후보수 근처에 머무는지 본다.
  */
 @Slf4j
 @Service
@@ -45,13 +47,6 @@ public class RaceService {
      */
     public static final int MAX_TICKS = 700;
 
-    /**
-     * 응원이 판단력에 더할 수 있는 최대치.
-     *
-     * 출전 명단 화면이 "내 표가 판단력을 얼마나 올리는지" 를 미리 보여 주므로
-     * 그쪽에서도 같은 값을 봐야 한다. 화면이 따로 들고 있으면 한쪽만 바뀐다.
-     */
-    public static final double MAX_CHEER = 0.10;
 
     // 스탯이 뽑히는 범위. 한줄평(RaceComments)이 이 값을 보고 기준을 잡는다.
     // 범위와 판정 기준을 각자 들고 있으면 한쪽만 바뀌었을 때 판정이 조용히
@@ -143,18 +138,13 @@ public class RaceService {
 
         List<Runner> runners = new ArrayList<>();
         for (RaceLane lane : race.getLanes()) {
-            runners.add(new Runner(lane.getCandidate(), lane.getSense(), lane.getPace(),
-                    lane.getCheerBonus()));
+            runners.add(new Runner(lane.getCandidate(), lane.getSense(), lane.getPace()));
         }
         // 저장된 레인은 순위 순으로 들어 있다. 주행은 출전 순서대로 난수를 뽑으므로
-        // 처음 달릴 때와 같은 순서로 되돌려 놓아야 같은 경기가 재현된다.
-        // 득표만으로 정렬하면 동점일 때 순서가 흔들려 다른 경기가 나온다 —
-        // 실제로 재현 결과의 우승자가 달라졌다.
-        runners.sort(Comparator
-                .comparingInt((Runner r) -> -r.candidate.getVoteCount())
-                .thenComparingLong(r -> r.candidate.getId()));
+        // 처음 달릴 때와 같은 순서(후보 번호 순)로 되돌려야 같은 경기가 재현된다.
+        runners.sort(Comparator.comparingLong(r -> r.candidate.getId()));
 
-        skipStatDraws(random, runners.size());
+        restoreDraws(random, runners);
         int totalTicks = simulate(runners, course, random);
         rank(runners, course);
 
@@ -163,26 +153,35 @@ public class RaceService {
 
     // ── 출전 준비 ───────────────────────────────────────────
 
+    /**
+     * 출전 준비.
+     *
+     * 후보 번호 순으로 세운다. 득표 순으로 세우면 표가 난수를 뽑는 차례를 바꾸게 되어,
+     * 결과에 이득은 없더라도 "표가 경주를 건드린다" 는 여지가 남는다.
+     */
     private List<Runner> lineUp(List<Candidate> candidates, Random random) {
-        int totalVotes = candidates.stream().mapToInt(Candidate::getVoteCount).sum();
-
         List<Runner> runners = new ArrayList<>();
-        for (Candidate c : candidates) {
-            double cheer = totalVotes == 0 ? 0.0
-                    : MAX_CHEER * c.getVoteCount() / totalVotes;
-
+        for (Candidate c : candidates.stream().sorted(Comparator.comparing(Candidate::getId)).toList()) {
             double sense = SENSE_MIN + random.nextDouble() * SENSE_SPAN;
             double pace = PACE_MIN + random.nextDouble() * PACE_SPAN;
-
-            runners.add(new Runner(c, round2(sense), round2(pace), round2(cheer)));
+            Runner r = new Runner(c, round2(sense), round2(pace));
+            r.tiebreak = random.nextDouble();
+            runners.add(r);
         }
         return runners;
     }
 
-    /** 스탯 뽑기에 쓰인 난수 호출 횟수만큼 건너뛴다 (재현 시 주행 난수를 맞추기 위함). */
-    private void skipStatDraws(Random random, int runnerCount) {
-        for (int i = 0; i < runnerCount * 2; i++) {
-            random.nextDouble();
+    /**
+     * 재현할 때 출전 준비 단계의 난수를 같은 순서로 다시 뽑는다.
+     *
+     * 스탯은 저장된 값을 쓰므로 버리고, 동점 가르기 값만 되살린다.
+     * 뽑는 횟수가 어긋나면 그 뒤 주행 난수가 통째로 밀려 다른 경기가 된다.
+     */
+    private void restoreDraws(Random random, List<Runner> runners) {
+        for (Runner r : runners) {
+            random.nextDouble();          // 판단력 (저장값 사용)
+            random.nextDouble();          // 발놀림 (저장값 사용)
+            r.tiebreak = random.nextDouble();
         }
     }
 
@@ -238,8 +237,7 @@ public class RaceService {
     private int chooseStep(Runner r, Course course, Random random) {
         List<Integer> open = course.maze.openNeighbors(r.cell);
 
-        double sense = Math.min(0.97, r.sense + r.cheerBonus);
-        if (random.nextDouble() < sense) {
+        if (random.nextDouble() < r.sense) {
             // 최단 경로 쪽 — 거리표 값이 가장 작은 이웃
             int best = open.get(0);
             for (int n : open) {
@@ -258,10 +256,19 @@ public class RaceService {
         return pick.get(random.nextInt(pick.size()));
     }
 
+    /**
+     * 순위 결정.
+     *
+     * 같은 걸음에 나란히 나오는 일이 드물지 않다 (60경기에 6회쯤). 이때 정렬이
+     * 안정적이면 목록에 먼저 있던 쪽 — 즉 먼저 등록된 후보 — 가 늘 이긴다.
+     * 실제로 동점 6회가 전부 그렇게 갈렸다. 등록 순서가 승부를 가르면 안 되므로
+     * 시드에서 뽑아 둔 값으로 마지막을 가른다 (재현에도 그대로 따라온다).
+     */
     private void rank(List<Runner> runners, Course course) {
         runners.sort(Comparator
                 .comparing((Runner r) -> r.finishTick == null ? Integer.MAX_VALUE : r.finishTick)
-                .thenComparing(r -> course.dist[r.cell]));
+                .thenComparing(r -> course.dist[r.cell])
+                .thenComparingDouble(r -> r.tiebreak));
         for (int i = 0; i < runners.size(); i++) {
             runners.get(i).rank = i + 1;
         }
@@ -282,7 +289,6 @@ public class RaceService {
                     .race(race)
                     .candidate(r.candidate)
                     .sense(r.sense).pace(r.pace)
-                    .cheerBonus(r.cheerBonus)
                     .steps(r.steps)
                     .finishTick(r.finishTick).rank(r.rank)
                     .build());
@@ -306,14 +312,13 @@ public class RaceService {
                         .restaurantName(r.candidate.getRestaurant().getName())
                         .category(r.candidate.getRestaurant().getCategory().name())
                         .sense(r.sense).pace(r.pace)
-                        .cheerBonus(r.cheerBonus)
                         .voteCount(r.candidate.getVoteCount())
                         .rank(r.rank).finishTick(r.finishTick)
                         .steps(r.steps)
                         .efficiency(r.steps == 0 ? 0.0
                                 : round1(course.optimalLength * 100.0 / r.steps))
                         .path(r.path)
-                        .scouting(RaceComments.scouting(r.sense, r.pace, r.cheerBonus))
+                        .scouting(RaceComments.scouting(r.sense, r.pace))
                         .build())
                 .toList();
 
@@ -366,7 +371,9 @@ public class RaceService {
     /** 미로를 달리는 햄스터 한 마리의 상태. */
     static class Runner {
         final Candidate candidate;
-        final double sense, pace, cheerBonus;
+        final double sense, pace;
+        /** 같은 걸음에 들어왔을 때 순서를 가르는 값. 등록 순서가 승부를 가르지 않게 한다. */
+        double tiebreak;
         final List<Integer> path = new ArrayList<>();
         int cell;
         int previous = -1;
@@ -374,11 +381,10 @@ public class RaceService {
         Integer finishTick;
         int rank;
 
-        Runner(Candidate candidate, double sense, double pace, double cheerBonus) {
+        Runner(Candidate candidate, double sense, double pace) {
             this.candidate = candidate;
             this.sense = sense;
             this.pace = pace;
-            this.cheerBonus = cheerBonus;
         }
     }
 }

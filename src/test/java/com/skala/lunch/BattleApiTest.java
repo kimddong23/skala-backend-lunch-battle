@@ -231,32 +231,7 @@ class BattleApiTest {
                 .andExpect(jsonPath("$.winnerName").value("김치찌개의민족"));
     }
 
-    @Test
-    @DisplayName("표를 많이 받을수록 예상 판단력이 오르고, 합은 최대 가산을 넘지 않는다")
-    void 응원_가산_표기() throws Exception {
-        long kimchi = addCandidate(2, 1);
-        long gukbap = addCandidate(1, 1);
 
-        for (long m : new long[]{1, 2, 3}) vote(m, kimchi);   // 3표
-        vote(4L, gukbap);                                     // 1표
-
-        // 3표 / 4표 → 0.10 x 0.75 = 0.075 → 0.08 (소수 둘째 자리 반올림)
-        mockMvc.perform(get("/api/battles/" + battleId))
-                .andExpect(jsonPath("$.candidates[0].restaurantName").value("김치찌개의민족"))
-                .andExpect(jsonPath("$.candidates[0].cheerBonus").value(0.08))
-                .andExpect(jsonPath("$.candidates[1].cheerBonus").value(0.03));
-    }
-
-    @Test
-    @DisplayName("표가 하나도 없으면 예상 판단력도 0이다 — 0으로 나누지 않는다")
-    void 무표_가산() throws Exception {
-        addCandidate(2, 1);
-        addCandidate(1, 1);
-
-        mockMvc.perform(get("/api/battles/" + battleId))
-                .andExpect(jsonPath("$.candidates[0].cheerBonus").value(0.0))
-                .andExpect(jsonPath("$.candidates[1].cheerBonus").value(0.0));
-    }
 
     @Test
     @DisplayName("후보가 없으면 마감할 수 없다")

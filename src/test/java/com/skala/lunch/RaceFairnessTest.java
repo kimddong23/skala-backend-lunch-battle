@@ -21,10 +21,9 @@ import java.util.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * 경주가 정말 무작위인지, 그리고 <b>응원이 실제로 작동하는지</b> 확인한다.
+ * 경주가 정말 무작위이고, 화면에 올릴 만한 경기인지 확인한다.
  *
- * 뒤쪽이 더 중요하다. 결과가 순전히 운으로 갈리면 투표 화면은 있으나 마나 한
- * 장식이 된다. 그래서 "표를 받은 쪽이 실제로 길을 덜 헤매는가" 를 숫자로 확인한다.
+ * 득표가 결과를 바꾸지 않는지는 RaceIsFairTest 에서 따로 본다.
  */
 @SpringBootTest
 @Transactional
@@ -86,56 +85,7 @@ class RaceFairnessTest {
         assertThat(maxTicks).as("경기가 지나치게 길지 않음").isLessThanOrEqualTo(RaceService.MAX_TICKS);
     }
 
-    @Test
-    @DisplayName("응원은 유리하게 만들지만 결과를 정하지는 못한다")
-    void 응원은_거들_뿐() {
-        int favoriteWins = 0;
 
-        for (int i = 0; i < ROUNDS; i++) {
-            Long battleId = freshBattle(1000 + i, true);
-            String favorite = candidateRepository
-                    .findByBattleIdOrderByVoteCountDescIdAsc(battleId)
-                    .get(0).getRestaurant().getName();
-            RaceDto race = raceService.run(battleId);
-            if (race.getWinnerName().equals(favorite)) {
-                favoriteWins++;
-            }
-        }
-
-        double rate = favoriteWins * 100.0 / ROUNDS;
-        System.out.printf("── 표를 몰아준 후보의 우승률: %.1f%% (아무 영향 없다면 20%%)%n", rate);
-
-        assertThat(rate).as("응원에 효과가 있음").isGreaterThan(20.0);
-        assertThat(rate).as("응원만으로 결정되지 않음").isLessThan(60.0);
-    }
-
-    @Test
-    @DisplayName("응원은 판단력으로 작동한다 — 표를 받은 햄스터가 덜 헤맨다")
-    void 응원은_길을_알려준다() {
-        double cheeredSum = 0, plainSum = 0;
-        int cheeredN = 0, plainN = 0;
-
-        for (int i = 0; i < ROUNDS; i++) {
-            RaceDto race = raceService.run(freshBattle(2000 + i, true));
-            for (RaceDto.LaneDto lane : race.getLanes()) {
-                if (lane.getCheerBonus() > 0) {
-                    cheeredSum += lane.getEfficiency();
-                    cheeredN++;
-                } else {
-                    plainSum += lane.getEfficiency();
-                    plainN++;
-                }
-            }
-        }
-
-        double cheered = cheeredSum / cheeredN, plain = plainSum / plainN;
-        System.out.printf("── 최단 경로 대비 효율 ──%n   응원 받음 %.1f%%  ·  응원 없음 %.1f%%%n", cheered, plain);
-
-        // 효율 = 최단 걸음 / 실제 걸음. 판단력이 높으면 덜 돌아가므로 값이 커진다.
-        assertThat(cheered)
-                .as("응원이 판단력을 올려 실제로 길을 덜 헤매게 한다")
-                .isGreaterThan(plain);
-    }
 
 
     @Test

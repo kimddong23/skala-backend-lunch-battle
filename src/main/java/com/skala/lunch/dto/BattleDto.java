@@ -29,4 +29,7 @@ public class BattleDto {
 
     /** 상황에 맞는 한마디. */
     private String comment;
+
+    /** 응원의 효능에 대한 안내 (없음). */
+    private String cheerNotice;
 }

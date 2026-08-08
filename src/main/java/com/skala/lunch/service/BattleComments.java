@@ -33,12 +33,32 @@ final class BattleComments {
         }
 
         if (totalVotes == 0) {
-            return "아직 아무도 투표하지 않았습니다. 첫 표가 분위기를 만듭니다";
+            return "아직 아무도 응원하지 않았습니다. 첫 응원이 분위기를 만듭니다. 결과는 안 바꿉니다";
         }
         if (totalVotes < 3) {
-            return "이제 " + totalVotes + "표. 지금이라면 판을 뒤집을 수 있습니다";
+            return "이제 " + totalVotes + "표. 판을 뒤집을 수는 없지만 마음은 전해집니다";
         }
-        return totalVotes + "표 진행 중. 눈치 보지 말고 소신 투표하세요";
+        return totalVotes + "표 진행 중. 열심히 응원해 봐야 소용은 없습니다";
+    }
+
+    /**
+     * 응원의 효능에 대한 안내.
+     *
+     * 득표는 경주 결과에 전혀 영향을 주지 않는다. 화면이 이걸 숨기면
+     * 사용자는 표가 뭔가 하는 줄 알고 누르게 되므로, 아예 대놓고 적어 둔다.
+     * 배틀 번호로 문구를 고르면 화면을 새로 고쳐도 문구가 튀지 않는다.
+     */
+    private static final String[] CHEER_NOTICE = {
+            "응원한다고 해서 성공률이 높아지지는 않습니다. 그냥 응원하는 겁니다",
+            "응원은 경주에 아무 영향이 없습니다. 그래도 하는 게 사람 마음입니다",
+            "표를 아무리 몰아줘도 햄스터는 모릅니다. 햄스터는 미로만 봅니다",
+            "이 표는 결과를 바꾸지 않습니다. 다만 당신의 취향으로 기록되어 통계에 남습니다",
+            "응원의 효능: 없음. 그래도 응원한 메뉴가 이기면 기분은 좋습니다",
+    };
+
+    static String cheerNotice(Long battleId) {
+        long i = battleId == null ? 0 : Math.abs(battleId);
+        return CHEER_NOTICE[(int) (i % CHEER_NOTICE.length)];
     }
 
     /** 편식 지수 판정. */

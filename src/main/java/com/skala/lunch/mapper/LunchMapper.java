@@ -43,4 +43,7 @@ public interface LunchMapper {
 
     /** 분석 6 — 분류별 득표 점유율. */
     List<CategoryShareDto> findCategoryShare();
+
+    /** 응원 무용지수 — 최다 득표 메뉴가 실제로 이겼는지 배틀별로 본다. */
+    List<CheerEffectDto> findCheerEffect();
 }

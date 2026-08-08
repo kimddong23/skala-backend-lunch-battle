@@ -23,11 +23,14 @@ final class RaceComments {
         if (winner.steps <= optimalLength) {
             return name + " 우승. 한 걸음도 헤매지 않고 최단 경로만 밟았습니다";
         }
-        if (votes == 0) {
-            return name + " 우승. 한 표도 못 받은 햄스터가 출구를 먼저 찾았습니다";
+        if (votes == 0 && topVotes > 0) {
+            return name + " 우승. 한 표도 못 받은 햄스터가 출구를 먼저 찾았습니다. 응원은 응원일 뿐입니다";
         }
         if (votes < topVotes) {
-            return name + " 우승. 표는 다른 데 몰렸는데 길은 이쪽이 더 잘 알았습니다";
+            return name + " 우승. 표는 다른 데 몰렸지만 표는 표고 다리는 다리입니다";
+        }
+        if (votes == topVotes && topVotes > 0) {
+            return name + " 우승. 표를 제일 많이 받은 메뉴가 이겼습니다. 우연입니다";
         }
         if (all.size() >= 3 && closeFinish(all)) {
             return name + " 우승. 마지막 갈림길에서 갈렸습니다";
@@ -51,7 +54,7 @@ final class RaceComments {
      * 범위 밖에 놓여 한 갈래만 나오게 된다 — 속도 기준이 2.4/1.9 였을 때
      * 최저 속도가 3.0 이라 모든 햄스터가 "발이 빠릅니다" 한 마디만 받았다.
      */
-    static String scouting(double sense, double pace, double cheerBonus) {
+    static String scouting(double sense, double pace) {
         StringBuilder sb = new StringBuilder();
 
         double sharp = RaceService.SENSE_MIN + RaceService.SENSE_SPAN * 2 / 3.0;
@@ -64,8 +67,6 @@ final class RaceComments {
         double slow = RaceService.PACE_MIN + RaceService.PACE_SPAN / 3.0;
         if (pace >= quick) sb.append(" · 발이 부지런합니다");
         else if (pace <= slow) sb.append(" · 자주 멈춰 섭니다");
-
-        if (cheerBonus > 0) sb.append(" · 응원을 업었습니다");
 
         return sb.toString();
     }

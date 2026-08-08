@@ -58,6 +58,14 @@ public class AnalysisController {
         return ResponseEntity.ok(analysisService.participation());
     }
 
+    @GetMapping("/cheer-effect")
+    @Operation(summary = "응원 무용지수",
+            description = "최다 득표 메뉴가 실제로 우승했는지 배틀별로 본다. "
+                        + "경주는 득표를 보지 않으므로 맞는 비율은 우연 수준에 머문다")
+    public ResponseEntity<List<CheerEffectDto>> cheerEffect() {
+        return ResponseEntity.ok(analysisService.cheerEffect());
+    }
+
     @GetMapping("/category-share")
     @Operation(summary = "분류별 득표 점유율",
             description = "회사 전체 입맛 지도")

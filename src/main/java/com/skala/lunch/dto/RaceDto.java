@@ -63,8 +63,6 @@ public class RaceDto {
         private Double sense;
         private Double pace;
 
-        /** 응원으로 오른 판단력. */
-        private Double cheerBonus;
 
 
         private Integer voteCount;

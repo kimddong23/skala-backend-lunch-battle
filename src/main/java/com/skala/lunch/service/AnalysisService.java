@@ -54,6 +54,20 @@ public class AnalysisService {
     }
 
     /** 분석 6 — 분류별 득표 점유율. */
+    /**
+     * 응원 무용지수.
+     *
+     * 최다 득표 메뉴가 실제로 이긴 비율을 배틀별로 보여 준다.
+     * 경주가 득표를 보지 않으므로 이 비율은 우연 수준에 머문다.
+     */
+    public List<CheerEffectDto> cheerEffect() {
+        List<CheerEffectDto> rows = lunchMapper.findCheerEffect();
+        rows.forEach(r -> r.setVerdict(Boolean.TRUE.equals(r.getMatched())
+                ? "맞았습니다 (우연입니다)"
+                : "응원은 응원일 뿐이었습니다"));
+        return rows;
+    }
+
     public List<CategoryShareDto> categoryShare() {
         return lunchMapper.findCategoryShare();
     }

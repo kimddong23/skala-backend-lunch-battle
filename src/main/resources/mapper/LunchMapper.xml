@@ -228,4 +228,34 @@
         ORDER BY voteCount DESC, r.category
     </select>
 
+
+    <!--
+        응원 무용지수.
+
+        배틀마다 최다 득표 메뉴를 뽑아 실제 우승 메뉴와 견준다.
+        경주는 득표를 보지 않으므로 둘이 맞는 비율은 대체로 1/후보수 근처에 머문다.
+        "응원은 결과를 바꾸지 않는다" 를 주장이 아니라 기록으로 보여 주는 화면이다.
+    -->
+    <select id="findCheerEffect" resultType="CheerEffectDto">
+        SELECT
+            b.battle_date  AS battleDate,
+            fav.name       AS favoriteName,
+            fav.votes      AS favoriteVotes,
+            w.name         AS winnerName,
+            CASE WHEN fav.name = w.name THEN TRUE ELSE FALSE END AS matched
+        FROM battles b
+        JOIN restaurants w ON w.id = b.winner_restaurant_id
+        JOIN (
+            SELECT c.battle_id, r.name, c.vote_count AS votes
+            FROM candidates c
+            JOIN restaurants r ON r.id = c.restaurant_id
+            WHERE c.vote_count = (
+                SELECT MAX(c2.vote_count) FROM candidates c2 WHERE c2.battle_id = c.battle_id
+            )
+        ) fav ON fav.battle_id = b.id
+        WHERE b.status = 'CLOSED'
+          AND b.winner_restaurant_id IS NOT NULL
+          AND fav.votes > 0
+        ORDER BY b.battle_date DESC
+    </select>
 </mapper>

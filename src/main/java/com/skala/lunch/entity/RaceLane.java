@@ -33,9 +33,6 @@ public class RaceLane {
     @Column(nullable = false)
     private Double pace;
 
-    /** 응원(득표)으로 받은 판단력 가산. */
-    @Column(name = "cheer_bonus", nullable = false)
-    private Double cheerBonus;
 
 
     /** 실제로 내디딘 걸음 수. 최단 경로와 견주면 얼마나 헤맸는지 나온다. */

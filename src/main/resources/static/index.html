@@ -128,10 +128,11 @@
   .bar{height:13px;background:#efe9d8;border:2px solid var(--ink);border-radius:999px;
        overflow:hidden}
   .bar > span{display:block;height:100%;background:var(--flame);transition:width .4s ease}
-  .cand .cheers .arrow{color:var(--dim);font-weight:900}
-  .cand .cheers .gain{font-size:13.5px;font-weight:800;color:var(--mint);
-                      background:#e7f8f1;border:2px solid var(--mint);
-                      border-radius:999px;padding:2px 9px}
+  /* 응원의 효능(없음) 안내 */
+  .cheernote{margin-top:12px;display:flex;align-items:center;gap:9px;
+             background:#f3efe2;border:3px dashed var(--ink);border-radius:14px;
+             padding:10px 14px;font-size:13.5px;font-weight:700;color:var(--dim)}
+  .cheernote .ic{color:var(--ink)}
   .cand .btn{width:100%;background:var(--mint);color:#fff}
   .empty{grid-column:1/-1;text-align:center;color:var(--dim);font-size:14px;
          padding:26px 10px;border:3px dashed var(--line);border-radius:16px}
@@ -183,7 +184,7 @@
     <h1 class="logo"><svg class="ic"><use href="#bi-dice-5-fill"/></svg>
       런치 배틀 <em>LUNCH BATTLE</em></h1>
     <p class="tag">메뉴마다 햄스터 한 마리가 같은 미로에 들어갑니다. 출구를 먼저 찾은 메뉴가 오늘의 점심.<br>
-       최단 경로는 서버가 BFS 로 구해 두고, 햄스터는 판단력만큼만 그 길을 따라갑니다.</p>
+       최단 경로는 서버가 BFS 로 구해 두지만, 그 길을 따를지는 햄스터 마음입니다.</p>
     <span class="live"><svg class="ic"><use href="#bi-broadcast"/></svg>ON AIR</span>
   </div>
 </header>
@@ -194,7 +195,8 @@
   <section class="card stage" id="raceWrap">
     <h2><svg class="ic lg"><use href="#bi-signpost-split-fill"/></svg>
       미로 <span class="chip" id="stageChip">출발 대기</span></h2>
-    <p class="sub">서버가 만든 미로와 매 걸음의 위치를 그대로 재생합니다 · 화면은 결과를 바꾸지 않습니다</p>
+    <p class="sub">서버가 만든 미로와 매 걸음의 위치를 그대로 재생합니다 ·
+       모든 햄스터는 같은 조건이며 득표는 경주에 관여하지 않습니다</p>
 
     <div class="hud">
       <span id="battleInfo">불러오는 중…</span>
@@ -233,6 +235,11 @@
     </div>
     <div class="notice" id="notice">
       <svg class="ic"><use href="#bi-info-circle-fill"/></svg><span id="noticeText">준비되었습니다</span></div>
+
+    <div class="cheernote">
+      <svg class="ic"><use href="#bi-megaphone-fill"/></svg>
+      <span id="cheerNotice">응원한다고 해서 성공률이 높아지지는 않습니다. 그냥 응원하는 겁니다</span>
+    </div>
 
     <div class="grid" id="cands" style="margin-top:16px"></div>
   </section>
@@ -340,6 +347,7 @@ function render(){
     + (battle.winnerName ? ` · 우승 ${battle.winnerName}` : '');
   $('#voteChip').textContent = `응원 ${battle.totalVotes}표`;
   $('#comment').textContent = battle.comment || '—';
+  if (battle.cheerNotice) $('#cheerNotice').textContent = battle.cheerNotice;
   const canAdd = fillRestaurantOptions();
   $('#addBtn').disabled = closed || !canAdd;
   $('#raceBtn').disabled = closed || cands.length < 2 || racing;
@@ -378,13 +386,10 @@ function render(){
         </div>
         <div class="bd">
           <div class="cheers">
-            <b class="mono">${c.voteCount}</b><span>표</span>
-            <span class="arrow">→</span>
-            <span class="gain mono">판단력 +${c.cheerBonus.toFixed(2)}</span>
+            <b class="mono">${c.voteCount}</b><span>표 · 득표율 ${c.sharePercent}%</span>
           </div>
           <div class="bar"><span style="width:${(c.voteCount / max * 100).toFixed(0)}%;
                background:${LANE_COLORS[i % LANE_COLORS.length]}"></span></div>
-          <div class="meta">득표율 ${c.sharePercent}% · 갈림길에서 옳은 쪽을 고를 확률이 그만큼 오릅니다</div>
           ${closed ? '' : `<button class="btn sm" data-vote="${c.id}">${icon('megaphone-fill')}이 메뉴 응원</button>`}
         </div>
       </div>`).join('');
@@ -402,7 +407,7 @@ async function vote(candidateId){
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({memberId: Number($('#voterSel').value), candidateId})
     });
-    render(); notice('응원했습니다. 응원은 판단력을 올려 줍니다', 'ok');
+    render(); notice('응원했습니다. 결과는 안 바뀌지만 마음은 전해졌습니다', 'ok');
   } catch(e){ notice(e.message, 'err'); }
 }
 
@@ -874,7 +879,7 @@ function finishRace(){
       <td><b>${esc(l.restaurantName)}</b></td>
       <td class="note">${esc(l.scouting)}</td>
       <td class="n">${l.sense}</td><td class="n">${l.pace}</td>
-      <td class="n">${l.cheerBonus > 0 ? '+' + l.cheerBonus : '–'}</td>
+      <td class="n">${l.voteCount}표</td>
       <td class="n">${l.steps}</td>
       <td class="n">${l.efficiency}%</td>
       <td class="n">${l.finishTick ?? '실패'}</td></tr>`).join('')}
@@ -905,6 +910,8 @@ const TABS = [
    cols:[['weekdayName','요일'],['category','분류'],['voteCount','표',1]]},
   {key:'participation',    label:'참여율',
    cols:[['battleDate','날짜'],['winnerName','우승'],['candidateCount','후보',1],['voterCount','투표',1],['participationPercent','참여%',1]]},
+  {key:'cheer-effect',     label:'응원 무용지수',
+   cols:[['battleDate','날짜'],['favoriteName','최다 득표'],['favoriteVotes','표',1],['winnerName','실제 우승'],['verdict','결과']]},
 ];
 
 const MEDAL_ICON = ['trophy-fill', 'award-fill', 'award-fill'];
